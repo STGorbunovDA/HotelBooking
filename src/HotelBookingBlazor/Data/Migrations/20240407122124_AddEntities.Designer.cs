@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HotelBookingBlazor.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240407114624_AddEntities")]
+    [Migration("20240407122124_AddEntities")]
     partial class AddEntities
     {
         /// <inheritdoc />
@@ -450,9 +450,9 @@ namespace HotelBookingBlazor.Migrations
             modelBuilder.Entity("HotelBookingBlazor.Data.Entities.Room", b =>
                 {
                     b.HasOne("HotelBookingBlazor.Data.Entities.RoomType", "RoomType")
-                        .WithMany()
+                        .WithMany("Rooms")
                         .HasForeignKey("RoomTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("RoomType");
@@ -542,6 +542,8 @@ namespace HotelBookingBlazor.Migrations
             modelBuilder.Entity("HotelBookingBlazor.Data.Entities.RoomType", b =>
                 {
                     b.Navigation("RoomTypeAmenities");
+
+                    b.Navigation("Rooms");
                 });
 #pragma warning restore 612, 618
         }

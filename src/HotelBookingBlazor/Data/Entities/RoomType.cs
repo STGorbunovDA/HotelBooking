@@ -33,6 +33,7 @@ namespace HotelBookingBlazor.Data.Entities
         [ForeignKey(nameof(AddedBy))]
         public virtual ApplicationUser AddedByUser { get; set; }
 
-        public virtual ICollection<RoomTypeAmenity> RoomTypeAmenities { get; set; } // Amenities 
+        public virtual ICollection<RoomTypeAmenity> RoomTypeAmenities { get; set; } // Amenities
+        public virtual ICollection<Room> Rooms { get; set; }
     }
 }

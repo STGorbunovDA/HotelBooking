@@ -447,9 +447,9 @@ namespace HotelBookingBlazor.Migrations
             modelBuilder.Entity("HotelBookingBlazor.Data.Entities.Room", b =>
                 {
                     b.HasOne("HotelBookingBlazor.Data.Entities.RoomType", "RoomType")
-                        .WithMany()
+                        .WithMany("Rooms")
                         .HasForeignKey("RoomTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("RoomType");
@@ -539,6 +539,8 @@ namespace HotelBookingBlazor.Migrations
             modelBuilder.Entity("HotelBookingBlazor.Data.Entities.RoomType", b =>
                 {
                     b.Navigation("RoomTypeAmenities");
+
+                    b.Navigation("Rooms");
                 });
 #pragma warning restore 612, 618
         }
