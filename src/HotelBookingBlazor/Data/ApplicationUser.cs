@@ -16,14 +16,14 @@ namespace HotelBookingBlazor.Data
         [Required, MaxLength(8), Unicode(false)]
         public string RoleName { get; set; }
 
-        [Required, MaxLength(10), RegularExpression(@"^((\+7|7|8)+([0-9]){10})$")]
+        [Required, MaxLength(15), RegularExpression(@"^((\+7|7|8)+([0-9]){10})$")]
         public string ContactNumber { get; set; }
 
         [MaxLength(50), Unicode(false)]
         public string? Designation {  get; set; }
 
         [MaxLength(100), Unicode(false)]
-        public string Image { get; set; }
+        public string? Image { get; set; }
     }
 
 }
