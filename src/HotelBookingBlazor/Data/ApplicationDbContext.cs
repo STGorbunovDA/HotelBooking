@@ -20,10 +20,10 @@ namespace HotelBookingBlazor.Data
             builder.Entity<RoomTypeAmenity>()
                 .HasKey(ra => new { ra.RoomTypeId, ra.AmenityId });
 
-            builder.Entity<RoomType>()
-                .HasMany(rt => rt.Rooms)
-                .WithOne(r => r.RoomType)
-                .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<RoomType>() 
+                .HasMany(rt => rt.Rooms) // у номера один тип 
+                .WithOne(r => r.RoomType) // у типа много номеров
+                .OnDelete(DeleteBehavior.NoAction); // при удалении типа комната остаётся.
 
         }
     }
