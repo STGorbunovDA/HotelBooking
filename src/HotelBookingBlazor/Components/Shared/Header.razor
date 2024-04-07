@@ -49,7 +49,12 @@
                                 <NavLink href="testimonial.html" class="dropdown-item">Testimonial</NavLink> *@
                             </div>
                         </div>
-                        <NavLink href="contact" class="nav-item nav-link">Контакты</NavLink>
+                        <NavLink href="/contact" class="nav-item nav-link">Контакты</NavLink>
+                        <AuthorizeView>
+                            <Authorized>
+                                <NavLink href="/" class="nav-item nav-link">@context.User.FindFirst(AppConstans.CustomClaimTypes.FullName)?.Value</NavLink>
+                            </Authorized>
+                        </AuthorizeView>
                     </div>
                     <a href="/" class="btn btn-primary rounded-0 py-4 px-md-5 d-none d-lg-block">Купить сайт<i class="fa fa-arrow-right ms-3"></i></a>
                 </div>
