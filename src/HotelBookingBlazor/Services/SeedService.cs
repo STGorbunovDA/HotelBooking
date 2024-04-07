@@ -1,7 +1,6 @@
 ﻿using HotelBookingBlazor.Constants;
 using HotelBookingBlazor.Data;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
 
 namespace HotelBookingBlazor.Services
 {
@@ -33,7 +32,8 @@ namespace HotelBookingBlazor.Services
                 LastName = _configuration.GetValue<string>("AdminUser:LastName"),
                 RoleName = RoleType.Admin.ToString(),
                 ContactNumber = _configuration.GetValue<string>("AdminUser:ContactNumber")!,
-                Designation = "Administrator"
+                Designation = "Administrator",
+                Email = adminUserEmail,
             };
             await _userStore.SetUserNameAsync(applicationUser, adminUserEmail, default);
 
