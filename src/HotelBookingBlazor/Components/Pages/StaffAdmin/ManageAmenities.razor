@@ -1,0 +1,17 @@
+﻿@page "/staff-admin/manage-amenities"
+@using HotelBookingBlazor.Data.Entities
+
+@attribute [Authorize(Roles = "Staff,Admin")]
+
+@inject IAmenitiesService AmenitiesService
+
+<h1>Manage Amenities</h1>
+
+@code {
+    private Amenity[] _amenities = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _amenities = await AmenitiesService.GetAmenitiesAsync();
+    }
+}
