@@ -61,20 +61,20 @@
                                     <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">@context.User.FindFirst(AppConstans.CustomClaimTypes.FullName)?.Value</a>
                                     <div class="dropdown-menu rounded-0 m-0">
 
-                                        <NavLink href="booking" class="dropdown-item">My Profile</NavLink>
+                                        <NavLink href="booking" class="dropdown-item">Мой профиль</NavLink>
 
                                         <AuthorizeView Roles="@RoleType.Guest.ToString()" Context="guestContext">
-                                            <NavLink href="booking" class="dropdown-item">My Bookings</NavLink>
+                                            <NavLink href="booking" class="dropdown-item">Мои бронирования</NavLink>
                                         </AuthorizeView>
 
                                         <AuthorizeView Roles="Admin" Context="adminContext">
-                                            <NavLink href="booking" class="dropdown-item">Manage Staff</NavLink>
+                                            <NavLink href="booking" class="dropdown-item">Управление сотрудниками</NavLink>
                                         </AuthorizeView>
 
                                         <AuthorizeView Roles="Staff,Admin" Context="staffAdminContext">
-                                            <NavLink href="booking" class="dropdown-item">Manage Bookings</NavLink>
-                                            <NavLink href="booking" class="dropdown-item">Manage Rooms</NavLink>
-                                            <NavLink href="booking" class="dropdown-item">Manage Amenities</NavLink>
+                                            <NavLink href="booking" class="dropdown-item">Управление бронированием</NavLink>
+                                            <NavLink href="booking" class="dropdown-item">Управление комнатами</NavLink>
+                                            <NavLink href="/staff-admin/manage-amenities" class="dropdown-item">Управление удобствами</NavLink>
                                         </AuthorizeView>
                                     </div>
                                 </div>
@@ -87,12 +87,12 @@
                                 <AntiforgeryToken />
                                 <input type="hidden" name="ReturnUrl" value="@currentUrl" />
                                 <button type="submit" class="btn btn-primary rounded-0 py-4 px-md-5 d-none d-lg-block">
-                                    Logout<i class="fa fa-arrow-right ms-3"></i>
+                                    Выйти<i class="fa fa-arrow-right ms-3"></i>
                                 </button>
                             </form>
                         </Authorized>
                         <NotAuthorized>
-                            <a href="/account/login" class="btn btn-primary rounded-0 py-4 px-md-5 d-none d-lg-block"><i class="fa fa-arrow-left me-3"></i> Login</a>
+                            <a href="/account/login" class="btn btn-primary rounded-0 py-4 px-md-5 d-none d-lg-block"><i class="fa fa-arrow-left me-3"></i> Войти</a>
                         </NotAuthorized>
                     </AuthorizeView>
 
