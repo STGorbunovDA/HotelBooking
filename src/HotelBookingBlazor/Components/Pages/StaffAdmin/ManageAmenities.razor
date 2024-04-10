@@ -3,15 +3,102 @@
 
 @attribute [Authorize(Roles = "Staff,Admin")]
 
+@attribute [StreamRendering]
+
+@inject NavigationManager NavigationManager
+
 @inject IAmenitiesService AmenitiesService
 
-<h1>Manage Amenities</h1>
+<div>
+    <h1>Управление удобствами</h1>
+    <hr />
+    <div class="row">
+        <div class="col-sm-3">
+            <EditForm Model="Model" Enhance FormName="amenity" OnValidSubmit="SaveAmenityAsync">
+                 <DataAnnotationsValidator />
+                 <div class="mb-3">
+                     <label class="form-label">Название: </label>
+                     <InputText @bind-Value="Model.Name" class="form-control" placeholder="Название удобства" />
+                     <ValidationMessage For="() => Model.Name" class="text-danger" />
+                 </div>
+                 <div class="mb-3">
+                     <label class="form-label">Иконка: </label>
+                     <InputText @bind-Value="Model.Icon" class="form-control" placeholder="Иконка" />
+                     <ValidationMessage For="() => Model.Icon" class="text-danger" />
+                 </div>
+                 <div class="mb-3">
+                     <button type="submit" class="btn btn-sm btn-success" disabled="@_isSaving">
+                        @if (_isSaving)
+                        {
+                            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                            <span role="status">Загрузка...</span>
+                        }
+                        else
+                        {
+                        <span>Сохранить</span>
+                        }
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+        <div class="col-sm-9">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Иконка</th>
+                        <th>Название удобства</th>
+                        <th>Иконка Css Class</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (_amenities.Length == 0)
+                    {
+                        <tr>
+                            <td colspan="5">
+                                <h4 class="text-danger">Пока никаких удобств нет.</h4>
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var a in _amenities)
+                    {
+                        <tr>
+                            <td>@a.Id</td>
+                            <td>
+                                <i class="@a.Icon text-primary" />
+                            </td>
+                            <td>@a.Name</td>
+                            <td>@a.Icon</td>
+
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 @code {
+    [SupplyParameterFromForm]
+    private Amenity Model { get; set; } = new();
+
+    private bool _isSaving;
+
     private Amenity[] _amenities = [];
 
     protected override async Task OnInitializedAsync()
     {
         _amenities = await AmenitiesService.GetAmenitiesAsync();
+    }
+
+    private async Task SaveAmenityAsync()
+    {
+        _isSaving = true;
+        await Task.Delay(3000);
+        var savedAmenity = await AmenitiesService.SaveAmenityAsync(Model);
+        _amenities = [.. _amenities, savedAmenity];
+        //NavigationManager.Refresh();
+        _isSaving = false;
     }
 }
