@@ -1,41 +1,49 @@
 ﻿@page "/staff-admin/manage-amenities"
 @using HotelBookingBlazor.Data.Entities
+@using Microsoft.AspNetCore.Antiforgery
 
 @attribute [Authorize(Roles = "Staff,Admin")]
 
 @attribute [StreamRendering]
+@* @attribute [RequireAntiforgeryToken] *@
 
 @inject NavigationManager NavigationManager
 
 @inject IAmenitiesService AmenitiesService
 
-<div>
+<div class="container">
     <h1>Управление удобствами</h1>
     <hr />
     <div class="row">
         <div class="col-sm-3">
             <EditForm Model="Model" Enhance FormName="amenity" OnValidSubmit="SaveAmenityAsync">
                  <DataAnnotationsValidator />
-                 <div class="mb-3">
-                     <label class="form-label">Название: </label>
-                     <InputText @bind-Value="Model.Name" class="form-control" placeholder="Название удобства" />
-                     <ValidationMessage For="() => Model.Name" class="text-danger" />
-                 </div>
-                 <div class="mb-3">
-                     <label class="form-label">Иконка: </label>
-                     <InputText @bind-Value="Model.Icon" class="form-control" placeholder="Иконка" />
-                     <ValidationMessage For="() => Model.Icon" class="text-danger" />
-                 </div>
-                 <div class="mb-3">
-                     <button type="submit" class="btn btn-sm btn-success" disabled="@_isSaving">
+                 @if (!string.IsNullOrWhiteSpace(_error))
+                {
+                    <div class="mb-3 text-danger">
+                        <small>@_error</small>
+                    </div>
+                }
+                <div class="mb-3">
+                    <label class="form-label">Название: </label>
+                    <InputText @bind-Value="Model.Name" class="form-control" placeholder="Название удобства" />
+                    <ValidationMessage For="() => Model.Name" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Иконка: </label>
+                    <InputText @bind-Value="Model.Icon" class="form-control" placeholder="Иконка" />
+                    <ValidationMessage For="() => Model.Icon" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-sm btn-success" disabled="@_isSaving">
                         @if (_isSaving)
                         {
                             <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-                            <span role="status">Загрузка...</span>
+                            <span role="status">Сохранение...</span>
                         }
                         else
                         {
-                        <span>Сохранить</span>
+                            <span>Сохранить</span>
                         }
                     </button>
                 </div>
@@ -70,7 +78,13 @@
                             </td>
                             <td>@a.Name</td>
                             <td>@a.Icon</td>
-
+                            <td>
+                                @* <form method="post" data-enhance @formname="@("edit-"+a.Id)" @onsubmit="() => EditAmenity(a)">
+                            <AntiforgeryToken />
+                            <button type="submit" class="btn btn-sm btn-primary">Edit</button>
+                            </form> *@
+                                <a href="staff-admin/manage-amenities?id=@a.Id" class="btn btn-sm btn-primary">Edit</a>
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -83,21 +97,46 @@
     [SupplyParameterFromForm]
     private Amenity Model { get; set; } = new();
 
+    [SupplyParameterFromQuery(Name = "id")]
+    private int AmenityId { get; set; }
+
     private bool _isSaving;
+    private string? _error;
 
     private Amenity[] _amenities = [];
 
     protected override async Task OnInitializedAsync()
     {
         _amenities = await AmenitiesService.GetAmenitiesAsync();
+        if (AmenityId > 0)
+        {
+            var ametity = _amenities.FirstOrDefault(a => a.Id == AmenityId);
+            if (ametity is not null)
+            {
+                Model = ametity;
+            }
+        }
     }
 
     private async Task SaveAmenityAsync()
     {
+        _error = null;
         _isSaving = true;
         await Task.Delay(3000);
-        var savedAmenity = await AmenitiesService.SaveAmenityAsync(Model);
-        _amenities = [.. _amenities, savedAmenity];
+        MethodResult<Amenity> result = await AmenitiesService.SaveAmenityAsync(Model);
+        if (result.IsSuccess)
+        {
+            if (Model.Id == 0)
+            {
+                _amenities = [.. _amenities, result.Data];
+            }
+            Model = new();
+        }
+        else
+        {
+            _error = result.ErrorMessage ?? "Error in saving amenity";
+        }
+
         //NavigationManager.Refresh();
         _isSaving = false;
     }
