@@ -1,5 +1,6 @@
 ﻿using HotelBookingBlazor.Data;
 using HotelBookingBlazor.Data.Entities;
+using HotelBookingBlazor.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingBlazor.Services
@@ -7,7 +8,7 @@ namespace HotelBookingBlazor.Services
     public interface IAmenitiesService
     {
         Task<Amenity[]> GetAmenitiesAsync();
-        Task<Amenity> SaveAmenityAsync(Amenity amenity);
+        Task<MethodResult<Amenity>> SaveAmenityAsync(Amenity amenity);
     }
 
     public class AmenitiesService : IAmenitiesService
@@ -25,17 +26,30 @@ namespace HotelBookingBlazor.Services
             return await context.Amenities.ToArrayAsync();
         }
 
-        public async Task<Amenity> SaveAmenityAsync(Amenity amenity)
+        public async Task<MethodResult<Amenity>> SaveAmenityAsync(Amenity amenity)
         {
             using var context = _contextFactory.CreateDbContext();
             if (amenity.Id == 0)
             {
                 // Create new Amenity
+
+                if (await context.Amenities.AnyAsync(a => a.Name == amenity.Name))
+                {
+                    //return MethodResult<Amenity>.Failure("Удобства уже существуют");
+                    return "Такие удобства уже существуют";
+                }
+
                 await context.Amenities.AddAsync(amenity);
 
             }
             else
             {
+                if (await context.Amenities.AnyAsync(a => a.Name == amenity.Name && a.Id != amenity.Id))
+                {
+                    return "Такие удобства уже существуют";
+                }
+
+
                 // Update existing Amenity
                 var dbAmenity = await context.Amenities
                                                 .AsTracking()
