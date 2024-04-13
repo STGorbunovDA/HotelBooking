@@ -1,6 +1,7 @@
 ﻿using HotelBookingBlazor.Constants;
 using HotelBookingBlazor.Data;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingBlazor.Services
 {
@@ -10,18 +11,29 @@ namespace HotelBookingBlazor.Services
         private readonly IUserStore<ApplicationUser> _userStore;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
+        private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
 
         public SeedService(UserManager<ApplicationUser> userManager, IUserStore<ApplicationUser> userStore,
-                           RoleManager<IdentityRole> roleManager, IConfiguration configuration)
+                           RoleManager<IdentityRole> roleManager, IConfiguration configuration,
+                           IDbContextFactory<ApplicationDbContext> contextFactory)
         {
             _userManager = userManager;
             _userStore = userStore;
             _roleManager = roleManager;
             _configuration = configuration;
+            _contextFactory = contextFactory;
         }
 
         public async Task SeedDatabaseAsync()
         {
+            using(var context = _contextFactory.CreateDbContext())
+            {
+                if(context.Database.GetPendingMigrations().Any())
+                {
+                    context.Database.Migrate();
+                }
+            }
+
             var adminUserEmail = _configuration.GetValue<string>("AdminUser:Email");
             var dbAdminUser = _userManager.FindByEmailAsync(email: adminUserEmail);
             if (dbAdminUser is not null) return; // Если админ есть в БД
