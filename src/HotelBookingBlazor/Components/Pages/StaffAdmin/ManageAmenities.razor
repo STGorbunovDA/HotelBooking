@@ -18,6 +18,7 @@
         <div class="col-sm-3">
             <EditForm Model="Model" Enhance FormName="amenity" OnValidSubmit="SaveAmenityAsync">
                  <DataAnnotationsValidator />
+                 <input type="hidden" value="@Model.Id" name="Model.Id" />
                  @if (!string.IsNullOrWhiteSpace(_error))
                 {
                     <div class="mb-3 text-danger">
@@ -50,50 +51,56 @@
             </EditForm>
         </div>
         <div class="col-sm-9">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Id</th>
-                        <th>Иконка</th>
-                        <th>Название удобства</th>
-                        <th>Иконка Css Class</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (_amenities.Length == 0)
-                    {
+            <div class="" style="max-height: 75vh; overflow-y: scroll;">
+                <table class="table">
+                    <thead>
                         <tr>
-                            <td colspan="5">
-                                <h4 class="text-danger">Пока никаких удобств нет.</h4>
-                            </td>
+                            <th>Id</th>
+                            <th>Иконка</th>
+                            <th>Название удобства</th>
+                            <th>Иконка Css Class</th>
+                            <th></th>
                         </tr>
-                    }
-                    @foreach (var a in _amenities)
-                    {
-                        <tr>
-                            <td>@a.Id</td>
-                            <td>
-                                <i class="@a.Icon text-primary" />
-                            </td>
-                            <td>@a.Name</td>
-                            <td>@a.Icon</td>
-                            <td>
-                                @* <form method="post" data-enhance @formname="@("edit-"+a.Id)" @onsubmit="() => EditAmenity(a)">
-                            <AntiforgeryToken />
-                            <button type="submit" class="btn btn-sm btn-primary">Edit</button>
-                            </form> *@
-                                <a href="staff-admin/manage-amenities?id=@a.Id" class="btn btn-sm btn-primary">Edit</a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @if (_amenities.Length == 0)
+                        {
+                            <tr>
+                                <td colspan="5">
+                                    <h4 class="text-danger">Пока никаких удобств нет.</h4>
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var a in _amenities)
+                        {
+                            <tr>
+                                <td>@a.Id</td>
+                                <td>
+                                    <i class="@a.Icon text-primary" />
+                                </td>
+                                <td>@a.Name</td>
+                                <td>@a.Icon</td>
+                                <td>
+                                    @* <form method="post" data-enhance @formname="@("edit-"+a.Id)" @onsubmit="() => EditAmenity(a)">
+                                <AntiforgeryToken />
+                                <button type="submit" class="btn btn-sm btn-primary">Edit</button>
+                                </form> *@
+                                    <a href="staff-admin/manage-amenities?id=@a.Id" class="btn btn-sm btn-primary">Edit</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
 @code {
+
+    [CascadingParameter]
+    public HttpContext HttpContext { get; set; }
+
     [SupplyParameterFromForm]
     private Amenity Model { get; set; } = new();
 
@@ -110,10 +117,13 @@
         _amenities = await AmenitiesService.GetAmenitiesAsync();
         if (AmenityId > 0)
         {
-            var ametity = _amenities.FirstOrDefault(a => a.Id == AmenityId);
-            if (ametity is not null)
+            if (HttpMethods.IsGet(HttpContext.Request.Method))
             {
-                Model = ametity;
+                var ametity = _amenities.FirstOrDefault(a => a.Id == AmenityId);
+                if (ametity is not null)
+                {
+                    Model = ametity;
+                }
             }
         }
     }
@@ -122,13 +132,19 @@
     {
         _error = null;
         _isSaving = true;
-        await Task.Delay(3000);
-        MethodResult<Amenity> result = await AmenitiesService.SaveAmenityAsync(Model);
+        await Task.Delay(2000);
+        MethodResult<Amenity> result = await AmenitiesService.SaveAmenityAsync(Model.Clone());
         if (result.IsSuccess)
         {
             if (Model.Id == 0)
             {
                 _amenities = [.. _amenities, result.Data];
+            }
+            else
+            {
+                var ametity = _amenities.First(a => a.Id == Model.Id);
+                ametity.Name = result.Data.Name;
+                ametity.Icon = result.Data.Icon;
             }
             Model = new();
         }
