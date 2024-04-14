@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using HotelBookingBlazor.Services;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using HotelBookingBlazor.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +67,8 @@ app.MapRazorComponents<App>()
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
+
+app.MapCustomEndpoints();
 
 app.Run();
 
