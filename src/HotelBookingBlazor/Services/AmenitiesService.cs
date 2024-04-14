@@ -9,6 +9,7 @@ namespace HotelBookingBlazor.Services
     {
         Task<Amenity[]> GetAmenitiesAsync();
         Task<MethodResult<Amenity>> SaveAmenityAsync(Amenity amenity);
+        Task<MethodResult<bool>> DeleteAmenityAsync(int id);
     }
 
     public class AmenitiesService : IAmenitiesService
@@ -23,7 +24,7 @@ namespace HotelBookingBlazor.Services
         public async Task<Amenity[]> GetAmenitiesAsync()
         {
             using var context = _contextFactory.CreateDbContext();
-            return await context.Amenities.ToArrayAsync();
+            return await context.Amenities.Where(a => !a.IsDeleted).ToArrayAsync();
         }
 
         public async Task<MethodResult<Amenity>> SaveAmenityAsync(Amenity amenity)
@@ -33,7 +34,7 @@ namespace HotelBookingBlazor.Services
             {
                 // Create new Amenity
 
-                if (await context.Amenities.AnyAsync(a => a.Name == amenity.Name))
+                if (await context.Amenities.AnyAsync(a => a.Name == amenity.Name && !a.IsDeleted))
                 {
                     //return MethodResult<Amenity>.Failure("Удобства уже существуют");
                     return "Такие удобства уже существуют";
@@ -44,7 +45,7 @@ namespace HotelBookingBlazor.Services
             }
             else
             {
-                if (await context.Amenities.AnyAsync(a => a.Name == amenity.Name && a.Id != amenity.Id))
+                if (await context.Amenities.AnyAsync(a => a.Name == amenity.Name && a.Id != amenity.Id && !a.IsDeleted))
                 {
                     return "Такие удобства уже существуют";
                 }
@@ -61,6 +62,20 @@ namespace HotelBookingBlazor.Services
 
             await context.SaveChangesAsync();
             return amenity;
+        }
+
+        public async Task<MethodResult<bool>> DeleteAmenityAsync(int id)
+        {
+            using var context = _contextFactory.CreateDbContext();
+            var amenity = await context.Amenities.AsTracking().FirstOrDefaultAsync(a => a.Id == id);
+
+            if(amenity is not null)
+            {
+                amenity.IsDeleted = true;
+                await context.SaveChangesAsync();
+                return true;
+            }
+            return false;
         }
     }
 
