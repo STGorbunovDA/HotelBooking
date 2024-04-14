@@ -8,8 +8,10 @@ namespace HotelBookingBlazor.Models
         [Required, MaxLength(100)]
         public string Name { get; set; }
 
-        [Required, MaxLength(100)]
+        [MaxLength(100)]
         public string? Image { get; set; }
+
+        public IFormFile ImageFile { get; set; }
 
         [Required, Range(1, double.MaxValue)]
         public decimal Price { get; set; }
@@ -27,10 +29,13 @@ namespace HotelBookingBlazor.Models
 
         public RoomTypeAmenityCreateModel[] Amenities { get; set; } = [];
 
+
         public class RoomTypeAmenityCreateModel
         {
             public int Id { get; set; }
             public int? Unit { get; set; }
+
+            public RoomTypeAmenityCreateModel(int id, int? unit) => (Id, Unit) = (id, unit);
         }
     }
 }
