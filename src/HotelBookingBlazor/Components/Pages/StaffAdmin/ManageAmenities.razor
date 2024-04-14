@@ -60,13 +60,14 @@
                             <th>Название удобства</th>
                             <th>Иконка Css Class</th>
                             <th></th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
                         @if (_amenities.Length == 0)
                         {
                             <tr>
-                                <td colspan="5">
+                                <td colspan="6">
                                     <h4 class="text-danger">Пока никаких удобств нет.</h4>
                                 </td>
                             </tr>
@@ -81,11 +82,12 @@
                                 <td>@a.Name</td>
                                 <td>@a.Icon</td>
                                 <td>
-                                    @* <form method="post" data-enhance @formname="@("edit-"+a.Id)" @onsubmit="() => EditAmenity(a)">
-                                <AntiforgeryToken />
-                                <button type="submit" class="btn btn-sm btn-primary">Edit</button>
-                                </form> *@
                                     <a href="staff-admin/manage-amenities?id=@a.Id" class="btn btn-sm btn-primary">Edit</a>
+                                </td>
+                                <td>
+                                    <form method="post" action="staff-admin/manage-amenities/delete/@a.Id">
+                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
                                 </td>
                             </tr>
                         }
@@ -94,6 +96,8 @@
             </div>
         </div>
     </div>
+
+    <hr style="height: 5px" />
 </div>
 
 @code {
