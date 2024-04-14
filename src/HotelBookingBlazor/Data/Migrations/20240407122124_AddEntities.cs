@@ -95,16 +95,15 @@ namespace HotelBookingBlazor.Migrations
                 columns: table => new
                 {
                     RoomTypeId = table.Column<short>(type: "smallint", nullable: false),
-                    AmenityId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Unit = table.Column<int>(type: "int", nullable: false),
-                    AmenityId1 = table.Column<int>(type: "int", nullable: false)
+                    AmenityId = table.Column<int>(type: "int", nullable: false),
+                    Unit = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_RoomTypeAmenities", x => new { x.RoomTypeId, x.AmenityId });
                     table.ForeignKey(
-                        name: "FK_RoomTypeAmenities_Amenities_AmenityId1",
-                        column: x => x.AmenityId1,
+                        name: "FK_RoomTypeAmenities_Amenities_AmenityId",
+                        column: x => x.AmenityId,
                         principalTable: "Amenities",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -165,9 +164,9 @@ namespace HotelBookingBlazor.Migrations
                 column: "RoomTypeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RoomTypeAmenities_AmenityId1",
+                name: "IX_RoomTypeAmenities_AmenityId",
                 table: "RoomTypeAmenities",
-                column: "AmenityId1");
+                column: "AmenityId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoomTypes_AddedBy",

@@ -278,10 +278,7 @@ namespace HotelBookingBlazor.Migrations
                     b.Property<short>("RoomTypeId")
                         .HasColumnType("smallint");
 
-                    b.Property<string>("AmenityId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("AmenityId1")
+                    b.Property<int>("AmenityId")
                         .HasColumnType("int");
 
                     b.Property<int>("Unit")
@@ -289,7 +286,7 @@ namespace HotelBookingBlazor.Migrations
 
                     b.HasKey("RoomTypeId", "AmenityId");
 
-                    b.HasIndex("AmenityId1");
+                    b.HasIndex("AmenityId");
 
                     b.ToTable("RoomTypeAmenities");
                 });
@@ -472,7 +469,7 @@ namespace HotelBookingBlazor.Migrations
                 {
                     b.HasOne("HotelBookingBlazor.Data.Entities.Amenity", "Amenity")
                         .WithMany()
-                        .HasForeignKey("AmenityId1")
+                        .HasForeignKey("AmenityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
