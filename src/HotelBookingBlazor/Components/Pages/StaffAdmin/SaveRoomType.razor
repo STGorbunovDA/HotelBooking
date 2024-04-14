@@ -21,15 +21,6 @@
                     <InputText @bind-Value="Model.Name" class="form-control" placeholder="Название типа комнаты" />
                     <ValidationMessage For="() => Model.Name" class="text-danger" />
                 </div>
-            </div>
-            <div class="col-sm-6">
-                <div class="mb-3">
-                    <label class="form-label">Вид: </label>
-                    <InputFile @bind-Value="Model.ImageFile" class="form-control" />
-                    <ValidationMessage For="() => Model.ImageFile" class="text-danger" />
-                </div>
-            </div>
-            <div class="col-sm-6">
                 <div class="mb-3">
                     <label class="form-label">Цена: </label>
                     <InputNumber @bind-Value="Model.Price" class="form-control" placeholder="Цена" />
@@ -45,18 +36,27 @@
                     <InputNumber @bind-Value="Model.MaxChildren" class="form-control" placeholder="Кол-во детских мест:" />
                     <ValidationMessage For="() => Model.MaxChildren" class="text-danger" />
                 </div>
-            </div>
-            <div class="col-sm-6">
                 <div class="mb-3">
                     <label class="form-label">Описание: </label>
                     <InputTextArea @bind-Value="Model.Description" class="form-control" placeholder="Описание" rows="5" />
                     <ValidationMessage For="() => Model.Description" class="text-danger" />
                 </div>
             </div>
+            <div class="col-sm-6">
+                @if (!string.IsNullOrWhiteSpace(_imageUrl))
+                {
+                    <img src="@_imageUrl" class="img-fluid" />
+                }
+                <div class="mb-3">
+                    <label class="form-label">Вид: </label>
+                    <InputFile OnChange="OnImageSelectAsync" class="form-control" />
+                </div>
+            </div>
+
             <div class="col-sm-12 d-flex justify-content-between">
                 @foreach (var a in _amenities)
                 {
-                    <div>
+                    <div class="mb-3">
                         <label>
                             <InputCheckbox @bind-Value="a.IsChecked" />
                             <span>@a.Name</span>
@@ -77,6 +77,7 @@
                 </div>
             </div>
         </div>
+
     </EditForm>
 </div>
 
@@ -86,7 +87,8 @@
     private RoomTypeCreateModel Model { get; set; } = new();
 
     private AmenitySelectionModel[] _amenities = [];
-    private string? _errorMessage = null;  
+    private string? _errorMessage = null;
+    private string? _imageUrl = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -128,9 +130,6 @@
         {
             _errorMessage = ex.Message;
         }
-
-       
-        
     }
 
     private class AmenitySelectionModel
@@ -142,5 +141,16 @@
         public string Name { get; set; }
         public bool IsChecked { get; set; }
         public int? Unit { get; set; }
+    }
+
+    private async Task OnImageSelectAsync(InputFileChangeEventArgs e)
+    {
+        using var imageStream = e.File.OpenReadStream();
+        using var ms = new MemoryStream();
+        await imageStream.CopyToAsync(ms);
+
+        var base64ImageData = Convert.ToBase64String(ms.ToArray());
+        var extension = Path.GetExtension(e.File.Name)[1..];
+        _imageUrl = $"data:image/{extension};base64,{base64ImageData}";
     }
 }
