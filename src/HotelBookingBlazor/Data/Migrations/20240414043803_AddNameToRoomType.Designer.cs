@@ -4,6 +4,7 @@ using HotelBookingBlazor.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HotelBookingBlazor.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240414043803_AddNameToRoomType")]
+    partial class AddNameToRoomType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -144,7 +147,7 @@ namespace HotelBookingBlazor.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Amenities", (string)null);
+                    b.ToTable("Amenities");
                 });
 
             modelBuilder.Entity("HotelBookingBlazor.Data.Entities.Booking", b =>
@@ -191,7 +194,7 @@ namespace HotelBookingBlazor.Migrations
 
                     b.HasIndex("RoomId");
 
-                    b.ToTable("Bookings", (string)null);
+                    b.ToTable("Bookings");
                 });
 
             modelBuilder.Entity("HotelBookingBlazor.Data.Entities.Room", b =>
@@ -218,7 +221,7 @@ namespace HotelBookingBlazor.Migrations
 
                     b.HasIndex("RoomTypeId");
 
-                    b.ToTable("Rooms", (string)null);
+                    b.ToTable("Rooms");
                 });
 
             modelBuilder.Entity("HotelBookingBlazor.Data.Entities.RoomType", b =>
@@ -276,7 +279,7 @@ namespace HotelBookingBlazor.Migrations
 
                     b.HasIndex("AddedBy");
 
-                    b.ToTable("RoomTypes", (string)null);
+                    b.ToTable("RoomTypes");
                 });
 
             modelBuilder.Entity("HotelBookingBlazor.Data.Entities.RoomTypeAmenity", b =>
@@ -297,7 +300,7 @@ namespace HotelBookingBlazor.Migrations
 
                     b.HasIndex("AmenityId1");
 
-                    b.ToTable("RoomTypeAmenities", (string)null);
+                    b.ToTable("RoomTypeAmenities");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
