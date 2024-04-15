@@ -4,7 +4,10 @@
 
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager NavigationManager
+@inject IWebHostEnvironment WebHostEnvironment
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+
 
 @inject IAmenitiesService AmenitiesService
 @inject IRoomTypeService RoomTypeService
@@ -48,7 +51,7 @@
                     <img src="@_imageUrl" class="img-fluid" />
                 }
                 <div class="mb-3">
-                    <label class="form-label">Вид: </label>
+                    <label class="form-label">Изображение: </label>
                     <InputFile OnChange="OnImageSelectAsync" class="form-control" />
                 </div>
             </div>
@@ -89,6 +92,7 @@
     private AmenitySelectionModel[] _amenities = [];
     private string? _errorMessage = null;
     private string? _imageUrl = null;
+    private IBrowserFile? _image;
 
     protected override async Task OnInitializedAsync()
     {
@@ -101,6 +105,12 @@
     private async Task SaveRoomTypeAsync()
     {
         _errorMessage = null;
+
+        if(_image is null)
+        {
+            _errorMessage = "Требуется изображение";
+        }
+
         Model.Amenities = _amenities.Where(a => a.IsChecked)
                                     .Select(a =>
                                         new RoomTypeCreateModel.RoomTypeAmenityCreateModel(a.AmenityId, a.Unit)).ToArray();
@@ -116,7 +126,10 @@
 
         try
         {
-            Model.Image = string.Empty;
+            var imageUrl = await SaveImageAsync();
+            if (imageUrl is null) return;
+            Model.Image = imageUrl; 
+
             var result = await RoomTypeService.CreateRoomTypeAsync(Model, userId);
 
             if (result.IsSuccess)
@@ -152,5 +165,31 @@
         var base64ImageData = Convert.ToBase64String(ms.ToArray());
         var extension = Path.GetExtension(e.File.Name)[1..];
         _imageUrl = $"data:image/{extension};base64,{base64ImageData}";
+        _image = e.File;
+    }
+
+    private async Task<string?> SaveImageAsync()
+    {
+        if (_image is null) return null;
+        var extension = Path.GetExtension(_image.Name);
+        var imageName = $"root-type-img-{Guid.NewGuid()}{extension}";
+
+        var folderPath = Path.Combine(WebHostEnvironment.WebRootPath, "images", "room-types");
+        Directory.CreateDirectory(folderPath);
+
+        var fullFilePath = Path.Combine(folderPath, imageName);
+
+        try
+        {
+            await using FileStream fs = new(fullFilePath, FileMode.Create);
+            using var imageStream = _image.OpenReadStream();
+            await imageStream.CopyToAsync(fs);
+            return $"/images/room-types/{imageName}";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Ошибка сохранения изображения. {ex.Message}";
+            return null;
+        }
     }
 }
