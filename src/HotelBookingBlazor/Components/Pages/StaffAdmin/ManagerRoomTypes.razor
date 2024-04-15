@@ -1,5 +1,43 @@
 ﻿@page "/staff-admin/manage-room-types"
 
-@code {
+@inject IRoomTypeService RoomTypeService
 
+<div class="container">
+    <div class="d-flex justify-content-between">
+        <h1>Управление типами комнат</h1>
+        <NavLink href="staff-admin/manage-room-types/new" class="btn btn-sm btn-primary">+ Добавить новый тип комнаты</NavLink>
+    </div>
+    <hr />
+    <div class="row">
+        @if(_roomTypes.Length == 0)
+        {
+            <p>There is no room type created yet</p>
+        }
+        else
+        {
+            foreach (var rt in _roomTypes)
+            {
+                <div class="col-sm-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <img src="@rt.Image" class="img-fluid"/>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between">
+                            <h4>@rt.Name</h4>
+                            <h4>@rt.Price.ToString("c")/Ночь</h4>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private RoomTypeListModel[] _roomTypes = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _roomTypes = await RoomTypeService.GetRoomTypesForManagePageAsync();
+    }
 }
