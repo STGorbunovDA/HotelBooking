@@ -12,7 +12,7 @@ namespace HotelBookingBlazor.Data.Entities
         public string Name { get; set; }
 
         [Required, MaxLength(100), Unicode(false)]
-        public string? Image { get; set; }
+        public string Image { get; set; }
 
         [Required, Range(1, double.MaxValue)]
         public decimal Price { get; set; }
