@@ -8,6 +8,7 @@ namespace HotelBookingBlazor.Services
     public interface IRoomTypeService
     {
         Task<MethodResult<short>> CreateRoomTypeAsync(RoomTypeCreateModel model, string userId);
+        Task<RoomTypeListModel[]> GetRoomTypesForManagePageAsync();
     }
 
     public class RoomTypeService : IRoomTypeService
@@ -56,6 +57,14 @@ namespace HotelBookingBlazor.Services
             }
 
             return roomType.Id;
+        }
+
+        public async Task<RoomTypeListModel[]> GetRoomTypesForManagePageAsync()
+        {
+            using var context = _contextFactory.CreateDbContext();
+            return await context.RoomTypes
+                                .Select(rt => new RoomTypeListModel(rt.Id, rt.Name, rt.Image, rt.Price))
+                                .ToArrayAsync();
         }
     }
 }
