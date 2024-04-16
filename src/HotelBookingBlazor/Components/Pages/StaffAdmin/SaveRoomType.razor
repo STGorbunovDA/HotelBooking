@@ -7,8 +7,6 @@
 @inject IWebHostEnvironment WebHostEnvironment
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
-
-
 @inject IAmenitiesService AmenitiesService
 @inject IRoomTypeService RoomTypeService
 
@@ -46,13 +44,17 @@
                 </div>
             </div>
             <div class="col-sm-6">
-                @if (!string.IsNullOrWhiteSpace(_imageUrl))
-                {
-                    <img src="@_imageUrl" class="img-fluid" />
-                }
-                <div class="mb-3">
-                    <label class="form-label">Изображение: </label>
-                    <InputFile OnChange="OnImageSelectAsync" class="form-control" />
+                <div class="d-flex flex-column" style="height:100%;width:100%">
+                    <div class="mb-3">
+                        <label class="form-label">Изображение: </label>
+                        <InputFile OnChange="OnImageSelectAsync" class="form-control" />
+                    </div>
+                    <div class="img-wrapper flex-grow-1">
+                        @if (!string.IsNullOrWhiteSpace(_imageUrl))
+                        {
+                            <img src="@_imageUrl" class="img-fluid" />
+                        }
+                    </div>
                 </div>
             </div>
 
@@ -87,7 +89,7 @@
 @code {
 
     [SupplyParameterFromForm]
-    private RoomTypeCreateModel Model { get; set; } = new();
+    private RoomTypeSaveModel Model { get; set; } = new();
 
     private AmenitySelectionModel[] _amenities = [];
     private string? _errorMessage = null;
@@ -106,14 +108,14 @@
     {
         _errorMessage = null;
 
-        if(_image is null)
+        if (_image is null)
         {
             _errorMessage = "Требуется изображение";
         }
 
         Model.Amenities = _amenities.Where(a => a.IsChecked)
                                     .Select(a =>
-                                        new RoomTypeCreateModel.RoomTypeAmenityCreateModel(a.AmenityId, a.Unit)).ToArray();
+                                        new RoomTypeSaveModel.RoomTypeAmenitySaveModel(a.AmenityId, a.Unit)).ToArray();
 
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity is null || !authState.User.Identity.IsAuthenticated)
@@ -128,9 +130,9 @@
         {
             var imageUrl = await SaveImageAsync();
             if (imageUrl is null) return;
-            Model.Image = imageUrl; 
+            Model.Image = imageUrl;
 
-            var result = await RoomTypeService.CreateRoomTypeAsync(Model, userId);
+            var result = await RoomTypeService.SaveRoomTypeAsync(Model, userId);
 
             if (result.IsSuccess)
             {
