@@ -2,13 +2,15 @@
 using HotelBookingBlazor.Data.Entities;
 using HotelBookingBlazor.Models;
 using Microsoft.EntityFrameworkCore;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace HotelBookingBlazor.Services
 {
     public interface IRoomTypeService
     {
-        Task<MethodResult<short>> CreateRoomTypeAsync(RoomTypeCreateModel model, string userId);
+        Task<MethodResult<short>> SaveRoomTypeAsync(RoomTypeSaveModel model, string userId);
         Task<RoomTypeListModel[]> GetRoomTypesForManagePageAsync();
+        Task<RoomTypeSaveModel?> GetRoomTypeToEditAsync(short id);
     }
 
     public class RoomTypeService : IRoomTypeService
@@ -20,28 +22,67 @@ namespace HotelBookingBlazor.Services
             _contextFactory = contextFactory;
         }
 
-        public async Task<MethodResult<short>> CreateRoomTypeAsync(RoomTypeCreateModel model, string userId)
+        public async Task<MethodResult<short>> SaveRoomTypeAsync(RoomTypeSaveModel model, string userId)
         {
             using var context = _contextFactory.CreateDbContext();
-            if (await context.RoomTypes.AnyAsync(rt => rt.Name == model.Name))
+
+            RoomType? roomType;
+
+            if(model.Id == 0)
             {
-                return $"Номер с таким же названием {model.Name} уже существует";
+                if (await context.RoomTypes.AnyAsync(rt => rt.Name == model.Name))
+                {
+                    return $"Номер с таким же названием {model.Name} уже существует";
+                }
+
+                roomType = new RoomType
+                {
+                    Name = model.Name,
+                    AddedBy = userId,
+                    AddedOn = DateTime.Now,
+                    Description = model.Description,
+                    Image = model.Image,
+                    IsActive = model.IsActive,
+                    MaxAdults = model.MaxAdults,
+                    MaxChildren = model.MaxChildren,
+                    Price = model.Price,
+                };
+
+                await context.RoomTypes.AddAsync(roomType);
             }
-
-            var roomType = new RoomType
+            else
             {
-                Name = model.Name,
-                AddedBy = userId,
-                AddedOn = DateTime.Now,
-                Description = model.Description,
-                Image = model.Image,
-                IsActive = model.IsActive,
-                MaxAdults = model.MaxAdults,
-                MaxChildren = model.MaxChildren,
-                Price = model.Price,
-            };
+                if (await context.RoomTypes.AnyAsync(rt => rt.Name == model.Name && rt.Id != model.Id))
+                {
+                    return $"Номер с таким же названием {model.Name} уже существует";
+                }
 
-            await context.RoomTypes.AddAsync(roomType);
+                roomType = await context.RoomTypes
+                                              .AsTracking()
+                                              .FirstOrDefaultAsync(rt => rt.Id == model.Id);
+
+                if(roomType is null)
+                {
+                    return $"Недопустимый запрос";
+                }
+
+                roomType.Name = model.Name;
+                roomType.Description = model.Description;
+                roomType.Image = model.Image;
+                roomType.IsActive = model.IsActive;
+                roomType.MaxAdults = model.MaxAdults;
+                roomType.MaxChildren = model.MaxChildren;
+                roomType.Price = model.Price;
+
+                roomType.LastUpdatedBy = userId;
+                roomType.LastUpdatedOn = DateTime.Now;
+
+                var existingRoomTypeAmenities = await context.RoomTypeAmenities
+                                                .Where(rta => rta.RoomTypeId == model.Id)
+                                                .ToListAsync();
+                context.RoomTypeAmenities.RemoveRange(existingRoomTypeAmenities);
+            }
+   
             await context.SaveChangesAsync();
 
             if (model.Amenities.Length > 0)
@@ -65,6 +106,30 @@ namespace HotelBookingBlazor.Services
             return await context.RoomTypes
                                 .Select(rt => new RoomTypeListModel(rt.Id, rt.Name, rt.Image, rt.Price))
                                 .ToArrayAsync();
+        }
+
+        public async Task<RoomTypeSaveModel?> GetRoomTypeToEditAsync(short id)
+        {
+            using var context = _contextFactory.CreateDbContext();
+            var roomType = await context.RoomTypes
+                                  .Include(rt => rt.RoomTypeAmenities)
+                                  .Where(rt => rt.Id == id)
+                                  .Select(rt => new RoomTypeSaveModel
+                                  {
+                                      Name = rt.Name,
+                                      Image = rt.Image,
+                                      Price = rt.Price,
+                                      Description = rt.Description,
+                                      IsActive = rt.IsActive,
+                                      Id = rt.Id,
+                                      MaxAdults = rt.MaxAdults,
+                                      MaxChildren = rt.MaxChildren,
+                                      Amenities = rt.RoomTypeAmenities.Select(
+                                                        a => new RoomTypeSaveModel
+                                                                .RoomTypeAmenitySaveModel(a.AmenityId, a.Unit)).ToArray()
+                                  }).FirstOrDefaultAsync();
+
+            return roomType;
         }
     }
 }
