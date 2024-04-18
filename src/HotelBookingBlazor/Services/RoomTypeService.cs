@@ -2,7 +2,6 @@
 using HotelBookingBlazor.Data.Entities;
 using HotelBookingBlazor.Models;
 using Microsoft.EntityFrameworkCore;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace HotelBookingBlazor.Services
 {
