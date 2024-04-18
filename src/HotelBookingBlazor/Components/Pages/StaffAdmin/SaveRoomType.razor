@@ -1,4 +1,6 @@
 ﻿@page "/staff-admin/manage-room-types/new"
+@page "/staff-admin/manage-room-types/{roomTypeIdRaw:int?}/edit"
+
 @using HotelBookingBlazor.Data.Entities
 @using System.Security.Claims
 
@@ -11,7 +13,7 @@
 @inject IRoomTypeService RoomTypeService
 
 <div class="container">
-    <h1>Создание типа комнаты</h1>
+    <h1>@(RooTypeId.HasValue ? "Редактирование" : "Создание") типа комнаты</h1>
     <hr />
     <EditForm Model="Model" OnValidSubmit="SaveRoomTypeAsync">
         <DataAnnotationsValidator />
@@ -88,7 +90,12 @@
 
 @code {
 
-    [SupplyParameterFromForm]
+    [Parameter] public int? RoomTypeIdRaw { get; set; }
+
+    private short? RooTypeId => RoomTypeIdRaw > 0
+                    ? (short.TryParse(RoomTypeIdRaw.ToString(), out var roomTypeId) ? roomTypeId : null)
+                    : null;
+
     private RoomTypeSaveModel Model { get; set; } = new();
 
     private AmenitySelectionModel[] _amenities = [];
@@ -100,8 +107,26 @@
     {
         var amenities = await AmenitiesService.GetAmenitiesAsync();
 
-        _amenities = amenities.Select(a => new AmenitySelectionModel(a.Id, a.Name, false, null))
-                                            .ToArray();
+        if(RooTypeId.HasValue)
+        {
+            var roomType = await RoomTypeService.GetRoomTypeToEditAsync(RooTypeId.Value);
+
+            if(roomType is null)
+            {
+                NavigationManager.NavigateTo("/staff-admin/manage-room-types", replace: true);
+                return;
+            }
+            Model = roomType;
+            _imageUrl = Model.Image;
+        }
+
+        _amenities = amenities.Select(a =>
+                            {
+                                var existingAmenity = Model.Amenities.FirstOrDefault(ma => ma.Id == a.Id);
+                                return new AmenitySelectionModel(a.Id, a.Name, existingAmenity is not null, existingAmenity?.Unit);
+                            }).ToArray();
+
+
     }
 
     private async Task SaveRoomTypeAsync()
@@ -128,6 +153,7 @@
 
         try
         {
+            var existingImageUrl = Model.Image;
             var imageUrl = await SaveImageAsync();
             if (imageUrl is null) return;
             Model.Image = imageUrl;
@@ -136,6 +162,10 @@
 
             if (result.IsSuccess)
             {
+                if (!string.IsNullOrWhiteSpace(existingImageUrl))
+                {
+                    DeleteImage(existingImageUrl);
+                }
                 NavigationManager.NavigateTo("/staff-admin/manage-room-types");
                 return;
             }
@@ -193,5 +223,31 @@
             _errorMessage = $"Ошибка сохранения изображения. {ex.Message}";
             return null;
         }
+    }
+
+    private bool DeleteImage(string imageUrl)
+    {
+        var imagePath = imageUrl.Replace("/", "\\");
+        var rootPath = WebHostEnvironment.WebRootPath;
+        //var fullFilePath = Path.Combine(rootPath, imageUrl);
+
+        var fullFilePath = rootPath + imagePath;
+
+        if(File.Exists(fullFilePath))
+        {
+            try
+            {
+                File.Delete(fullFilePath);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                //Log this exeption
+                _errorMessage = $"Ошибка удаления изображения. {ex.Message}";
+                return false;
+            }
+            
+        }
+        return false;
     }
 }
