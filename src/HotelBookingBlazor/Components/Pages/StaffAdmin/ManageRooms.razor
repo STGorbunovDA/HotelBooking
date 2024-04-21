@@ -6,14 +6,14 @@
 @inject NavigationManager NavigationManager
 @inject IRoomTypeService RoomTypeService
 
-@inject IJSRuntime JsRuntime 
+@inject IJSRuntime JsRuntime
 
 <div class="container">
     <div class="d-flex justify-content-between align-items-center">
-        <h1>Управление комнатами</h1>
+        <h1>Управление номером <small>[@Name]</small></h1>
         <button type="button" class="btn btn-sm btn-primary"
                 @onclick="OpenCreateRoomModal">
-            + Добавить новую комнату
+            + Добавить новый номер
         </button>
     </div>
     <hr />
@@ -31,7 +31,7 @@
                 {
                     <tr>
                         <td colspan="3">
-                            <h4 class="text-danger">Отсутсвуют комнаты</h4>
+                            <h4 class="text-danger">Отсутсвуют номера</h4>
                         </td>
                     </tr>
                 }
@@ -39,7 +39,20 @@
                 {
                     <tr>
                         <td>@r.RoomNumber</td>
-                        <td>@r.IsAvailable</td>
+                        <td>
+                            <label>
+                                @if (r.IsAvailable)
+                                {
+                                    <input type="checkbox" @onchange="() => HandleIsAvaliableChange(r)" />
+                                    <span class="text-success">Да</span>
+                                }
+                                else
+                                {
+                                    <input type="checkbox" checked @onchange="() => HandleIsAvaliableChange(r)" />
+                                    <span class="text-danger">Нет</span>
+                                }
+                            </label>
+                        </td>
                         <td>
                             <button type="button" class="btn btn-sm btn-danger">
                                 <i class="fa fa-trash"></i>
@@ -53,16 +66,16 @@
 
 </div>
 
-<dialog id="@DialogId">
-    <div class="d-flex justify-content-center align-items-center">
-        <h4>Создание номера</h4>
+<dialog id="@DialogId" style="min-width:300px">
+    <div class="d-flex justify-content-between align-items-center">
+        <h4 class="m-0">Создание номера</h4>
         <button class="btn btn-danger btn-sm" @onclick="CloseRoomModal">X</button>
     </div>
     <hr />
-    <EditForm Model="_createRoomModel" OnInvalidSubmit="CreateRoomAsync">
+    <EditForm Model="_createRoomModel" OnValidSubmit="CreateRoomAsync">
         <DataAnnotationsValidator />
         <div class="mb-3">
-            <label class="form-label">Room Number: </label>
+            <label class="form-label">№ Номера: </label>
             <InputText @bind-Value="_createRoomModel.RoomNumber" class="form-control form-control-sm" placeholder="Введите № номера" />
             <ValidationMessage For="() => _createRoomModel.RoomNumber" class="text-danger" />
         </div>
@@ -76,7 +89,6 @@
             <button type="submit" class="btn btn-sm btn-primary">Создать номер</button>
         </div>
     </EditForm>
-    <h3>Модальное всплывающее окно</h3>
 </dialog>
 
 <style>
@@ -92,6 +104,9 @@
     private Room[] _rooms = [];
 
     private short _roomTypeId = 0;
+
+    [SupplyParameterFromQuery]
+    public string Name { get; set; } = "";
 
     private const string DialogId = "create-room-dialog";
 
@@ -123,5 +138,15 @@
     private async Task CloseRoomModal() => await JsRuntime.InvokeVoidAsync("window.closeModal", DialogId);
 
     private async Task OpenCreateRoomModal() => await JsRuntime.InvokeVoidAsync("window.showModal", DialogId);
-    
+
+    private async Task HandleIsAvaliableChange(Room room)
+    {
+        room.IsAvailable = !room.IsAvailable;
+
+        var result = await RoomTypeService.SaveRoomAsync(room);
+        if (!result.IsSuccess)
+        {
+            room.IsAvailable = !room.IsAvailable;
+        }
+    }
 }
