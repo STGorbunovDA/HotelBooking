@@ -31,6 +31,10 @@ namespace HotelBookingBlazor.Data
                 .WithOne(r => r.RoomType) // у типа много номеров
                 .OnDelete(DeleteBehavior.NoAction); // при удалении типа комната остаётся.
 
+            builder.Entity<Room>()
+                .HasIndex(r => r.RoomNumber)
+                .IsUnique();
+        
         }
     }
 }
