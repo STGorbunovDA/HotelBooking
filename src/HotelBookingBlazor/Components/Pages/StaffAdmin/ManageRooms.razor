@@ -54,7 +54,7 @@
                             </label>
                         </td>
                         <td>
-                            <button type="button" class="btn btn-sm btn-danger">
+                            <button type="button" class="btn btn-sm btn-danger" @onclick="()=> DeleteRoomAsync(r.Id)">
                                 <i class="fa fa-trash"></i>
                             </button>
                         </td>
@@ -132,7 +132,9 @@
             _rooms = [.. _rooms, result.Data];
             _createRoomModel = new();
             await CloseRoomModal();
+            return;
         }
+        await JsRuntime.InvokeVoidAsync("window.alertModal", result.ErrorMessage ?? "Ошибка создания номера");
     }
 
     private async Task CloseRoomModal() => await JsRuntime.InvokeVoidAsync("window.closeModal", DialogId);
@@ -147,6 +149,21 @@
         if (!result.IsSuccess)
         {
             room.IsAvailable = !room.IsAvailable;
+            await JsRuntime.InvokeVoidAsync("window.alertModal", result.ErrorMessage ?? "Ошибка изменения свободности номера");
+            return;
         }
+       
+    }
+
+    private async Task DeleteRoomAsync(int id)
+    {
+        var result = await RoomTypeService.DeleteRoomAsync(id);
+
+        if(result.IsSucces)
+        {
+            _rooms = _rooms.Where(r => r.Id != id).ToArray();
+            return;
+        }
+        await JsRuntime.InvokeVoidAsync("window.alertModal", result.ErrorMessage ?? "Ошибка удаления номера");
     }
 }
