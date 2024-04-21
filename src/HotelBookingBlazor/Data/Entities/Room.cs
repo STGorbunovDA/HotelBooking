@@ -15,6 +15,8 @@ namespace HotelBookingBlazor.Data.Entities
 
         public bool IsAvailable { get; set; }
 
+        public bool IsDeleted { get; set; }
+
         public virtual RoomType RoomType { get; set; }
     }
 }
