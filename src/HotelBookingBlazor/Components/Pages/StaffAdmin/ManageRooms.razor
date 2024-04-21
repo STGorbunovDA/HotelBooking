@@ -1,0 +1,127 @@
+﻿@page "/staff-admin/manage-room-types/{roomTypeId:int}/rooms"
+@using HotelBookingBlazor.Data.Entities
+
+@rendermode @(new InteractiveServerRenderMode(prerender:false))
+
+@inject NavigationManager NavigationManager
+@inject IRoomTypeService RoomTypeService
+
+@inject IJSRuntime JsRuntime 
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1>Управление комнатами</h1>
+        <button type="button" class="btn btn-sm btn-primary"
+                @onclick="OpenCreateRoomModal">
+            + Добавить новую комнату
+        </button>
+    </div>
+    <hr />
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>№ Номера</th>
+                    <th>Доступен</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_rooms.Length == 0)
+                {
+                    <tr>
+                        <td colspan="3">
+                            <h4 class="text-danger">Отсутсвуют комнаты</h4>
+                        </td>
+                    </tr>
+                }
+                @foreach (var r in _rooms)
+                {
+                    <tr>
+                        <td>@r.RoomNumber</td>
+                        <td>@r.IsAvailable</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-danger">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<dialog id="@DialogId">
+    <div class="d-flex justify-content-center align-items-center">
+        <h4>Создание номера</h4>
+        <button class="btn btn-danger btn-sm" @onclick="CloseRoomModal">X</button>
+    </div>
+    <hr />
+    <EditForm Model="_createRoomModel" OnInvalidSubmit="CreateRoomAsync">
+        <DataAnnotationsValidator />
+        <div class="mb-3">
+            <label class="form-label">Room Number: </label>
+            <InputText @bind-Value="_createRoomModel.RoomNumber" class="form-control form-control-sm" placeholder="Введите № номера" />
+            <ValidationMessage For="() => _createRoomModel.RoomNumber" class="text-danger" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">
+                <InputCheckbox @bind-Value="_createRoomModel.IsAvailable" />
+                Доступен?
+            </label>
+        </div>
+        <div class="mb-3">
+            <button type="submit" class="btn btn-sm btn-primary">Создать номер</button>
+        </div>
+    </EditForm>
+    <h3>Модальное всплывающее окно</h3>
+</dialog>
+
+<style>
+    ::backdrop {
+        background-color: rgba(224,145,20,0.5);
+    }
+</style>
+
+@code {
+
+    [Parameter] public int RoomTypeId { get; set; }
+
+    private Room[] _rooms = [];
+
+    private short _roomTypeId = 0;
+
+    private const string DialogId = "create-room-dialog";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (RoomTypeId <= 0 || !short.TryParse(RoomTypeId.ToString(), out var roomTypeId))
+        {
+            NavigationManager.NavigateTo("/staff-admin/manage-room-types", replace: true);
+            return;
+        }
+        _roomTypeId = roomTypeId;
+        _rooms = await RoomTypeService.GetRoomsAsync(_roomTypeId);
+    }
+
+    private Room _createRoomModel = new();
+
+    private async Task CreateRoomAsync()
+    {
+        _createRoomModel.RoomTypeId = _roomTypeId;
+        var result = await RoomTypeService.SaveRoomAsync(_createRoomModel);
+        if (result.IsSuccess)
+        {
+            _rooms = [.. _rooms, result.Data];
+            _createRoomModel = new();
+            await CloseRoomModal();
+        }
+    }
+
+    private async Task CloseRoomModal() => await JsRuntime.InvokeVoidAsync("window.closeModal", DialogId);
+
+    private async Task OpenCreateRoomModal() => await JsRuntime.InvokeVoidAsync("window.showModal", DialogId);
+    
+}
