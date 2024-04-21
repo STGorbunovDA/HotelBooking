@@ -1,4 +1,5 @@
-﻿using HotelBookingBlazor.Data;
+﻿using HotelBookingBlazor.Components.Pages;
+using HotelBookingBlazor.Data;
 using HotelBookingBlazor.Data.Entities;
 using HotelBookingBlazor.Models;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,9 @@ namespace HotelBookingBlazor.Services
         Task<MethodResult<short>> SaveRoomTypeAsync(RoomTypeSaveModel model, string userId);
         Task<RoomTypeListModel[]> GetRoomTypesForManagePageAsync();
         Task<RoomTypeSaveModel?> GetRoomTypeToEditAsync(short id);
+        Task<Room[]> GetRoomsAsync(short roomTypeId);
+        Task<MethodResult<Room>> SaveRoomAsync(Room room);
+        Task<MethodResult> DeleteRoomAsync(int roomId);
     }
 
     public class RoomTypeService : IRoomTypeService
@@ -27,7 +31,7 @@ namespace HotelBookingBlazor.Services
 
             RoomType? roomType;
 
-            if(model.Id == 0)
+            if (model.Id == 0)
             {
                 if (await context.RoomTypes.AnyAsync(rt => rt.Name == model.Name))
                 {
@@ -60,7 +64,7 @@ namespace HotelBookingBlazor.Services
                                               .AsTracking()
                                               .FirstOrDefaultAsync(rt => rt.Id == model.Id);
 
-                if(roomType is null)
+                if (roomType is null)
                 {
                     return $"Недопустимый запрос";
                 }
@@ -81,7 +85,7 @@ namespace HotelBookingBlazor.Services
                                                 .ToListAsync();
                 context.RoomTypeAmenities.RemoveRange(existingRoomTypeAmenities);
             }
-   
+
             await context.SaveChangesAsync();
 
             if (model.Amenities.Length > 0)
@@ -129,6 +133,60 @@ namespace HotelBookingBlazor.Services
                                   }).FirstOrDefaultAsync();
 
             return roomType;
+        }
+
+        public async Task<Room[]> GetRoomsAsync(short roomTypeId)
+        {
+            using var context = _contextFactory.CreateDbContext();
+            return await context.Rooms
+                                .Where(r => r.RoomTypeId == roomTypeId && !r.IsDeleted)
+                                .ToArrayAsync();
+        }
+
+        public async Task<MethodResult<Room>> SaveRoomAsync(Room room)
+        {
+            try
+            {
+                using var context = _contextFactory.CreateDbContext();
+
+                if (room.Id == 0)
+                {
+                   await context.Rooms.AddAsync(room);
+                }
+                else
+                {
+                    var dbRoom = await context.Rooms
+                                              .AsTracking()
+                                              .FirstOrDefaultAsync(r => r.Id == room.Id && !r.IsDeleted);
+                    if (dbRoom is null)
+                    {
+                        return "Invalid request";
+                    }
+                    dbRoom.IsAvailable = room.IsAvailable;
+                }
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+            return room;
+        }
+
+        public async Task<MethodResult> DeleteRoomAsync(int roomId)
+        {
+            using var context = _contextFactory.CreateDbContext();
+            var dbRoom = await context.Rooms
+                                            .AsTracking()
+                                            .FirstOrDefaultAsync(r => r.Id == roomId);
+            if (dbRoom is null)
+            {
+                return "Invalid request";
+            }
+
+            dbRoom.IsDeleted = true;
+            await context.SaveChangesAsync();
+            return true;
         }
     }
 }
