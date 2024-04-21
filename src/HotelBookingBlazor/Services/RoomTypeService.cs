@@ -151,6 +151,10 @@ namespace HotelBookingBlazor.Services
 
                 if (room.Id == 0)
                 {
+                    if(await context.Rooms.AnyAsync(r => r.RoomNumber == room.RoomNumber))
+                    {
+                        return "Номер комнаты уже существует";
+                    }
                    await context.Rooms.AddAsync(room);
                 }
                 else
@@ -168,7 +172,7 @@ namespace HotelBookingBlazor.Services
             }
             catch (Exception ex)
             {
-                return ex.Message;
+                return ex.InnerException?.Message ?? ex.Message;
             }
             return room;
         }
