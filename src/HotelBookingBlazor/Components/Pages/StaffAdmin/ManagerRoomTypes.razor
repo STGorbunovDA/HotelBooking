@@ -18,6 +18,8 @@
             foreach (var rt in _roomTypes)
             {
                 var editLink = $"staff-admin/manage-room-types/{rt.Id}/edit";
+                var manageRoomLink = $"/staff-admin/manage-room-types/{rt.Id}/rooms";
+                
                 <div class="col-sm-3">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
@@ -31,6 +33,9 @@
                         </div>
                         <div class="card-footer d-flex justify-content-between">
                             <h6>@rt.Price.ToString("c")/Ночь</h6>
+                            <NavLink href="@manageRoomLink" class="btn btn-sm btn-default">
+                                <i class="fa fa-list"></i>
+                            </NavLink>
                         </div>
                     </div>
                 </div>
