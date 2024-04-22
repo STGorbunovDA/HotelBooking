@@ -10,7 +10,12 @@
 
 <div class="container">
     <div class="d-flex justify-content-between align-items-center">
-        <h1>Управление номером <small>[@Name]</small></h1>
+        <h1>
+            <NavLink href="staff-admin/manage-room-types" class="me-2 btn-sm btn-default">
+                <i class="fa fa-arrow-left"></i>
+            </NavLink>
+            Управление номером <small>[@Name]</small>
+        </h1>
         <button type="button" class="btn btn-sm btn-primary"
                 @onclick="OpenCreateRoomModal">
             + Добавить новый номер
@@ -150,16 +155,15 @@
         {
             room.IsAvailable = !room.IsAvailable;
             await JsRuntime.InvokeVoidAsync("window.alertModal", result.ErrorMessage ?? "Ошибка изменения свободности номера");
-            return;
         }
-       
+
     }
 
     private async Task DeleteRoomAsync(int id)
     {
         var result = await RoomTypeService.DeleteRoomAsync(id);
 
-        if(result.IsSucces)
+        if (result.IsSucces)
         {
             _rooms = _rooms.Where(r => r.Id != id).ToArray();
             return;
