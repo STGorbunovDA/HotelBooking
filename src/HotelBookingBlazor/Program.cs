@@ -40,7 +40,8 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 builder.Services.AddTransient<SeedService>()
                 .AddTransient<IAmenitiesService, AmenitiesService>()
-                .AddTransient<IRoomTypeService, RoomTypeService>();
+                .AddTransient<IRoomTypeService, RoomTypeService>()
+                .AddTransient<IUserService, UserService>();
 
 var app = builder.Build();
 
