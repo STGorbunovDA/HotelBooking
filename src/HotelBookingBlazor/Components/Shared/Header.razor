@@ -68,7 +68,8 @@
                                         </AuthorizeView>
 
                                         <AuthorizeView Roles="Admin" Context="adminContext">
-                                            <NavLink href="booking" class="dropdown-item">Управление сотрудниками</NavLink>
+                                            <NavLink href="admin/manage-staff" class="dropdown-item">Управление сотрудниками</NavLink>
+                                            <NavLink href="admin/manage-staff/new" class="dropdown-item">Добавление сотрудников</NavLink>
                                         </AuthorizeView>
 
                                         <AuthorizeView Roles="Staff,Admin"  Context="staffAdminContext">
