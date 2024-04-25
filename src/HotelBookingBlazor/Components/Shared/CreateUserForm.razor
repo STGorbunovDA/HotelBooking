@@ -1,0 +1,135 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using System.Text
+@using System.Text.Encodings.Web
+@using HotelBookingBlazor.Components.Account
+@using HotelBookingBlazor.Components.Account.Shared
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using HotelBookingBlazor.Data
+
+
+@inject ILogger<CreateUserForm> Logger
+@inject NavigationManager NavigationManager
+
+@inject IUserService UserService
+
+
+<StatusMessage Message="@_message" />
+<EditForm Model="registerUserModel" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register" Enhance>
+    <DataAnnotationsValidator />
+    <h2>Создать новый аккаунт</h2>
+    <hr />
+
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="registerUserModel.FirstName" class="form-control" aria-required="true" placeholder="Имя" />
+                <label for="email">Имя</label>
+                <ValidationMessage For="() => registerUserModel.FirstName" class="text-danger" />
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="registerUserModel.LastName" class="form-control" aria-required="true" placeholder="Фамилия" />
+                <label for="email">Фамилия</label>
+                <ValidationMessage For="() => registerUserModel.LastName" class="text-danger" />
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="registerUserModel.ContactNumber" class="form-control" aria-required="true" placeholder="Номер телефона" />
+                <label for="email">Контактный номер</label>
+                <ValidationMessage For="() => registerUserModel.ContactNumber" class="text-danger" />
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="registerUserModel.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="Почта" />
+                <label for="email">Почта</label>
+                <ValidationMessage For="() => registerUserModel.Email" class="text-danger" />
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-floating mb-3">
+                <InputText type="password" @bind-Value="registerUserModel.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Пароль" />
+                <label for="password">Пароль</label>
+                <ValidationMessage For="() => registerUserModel.Password" class="text-danger" />
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-floating mb-3">
+                <InputText type="password" @bind-Value="registerUserModel.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Подтверждение пароля" />
+                <label for="confirm-password">Подтверждение пароля</label>
+                <ValidationMessage For="() => registerUserModel.ConfirmPassword" class="text-danger" />
+            </div>
+        </div>
+    </div>
+    <div>
+        <button type="submit" class="w-100 btn btn-lg btn-primary">@SubmitButtonText</button>
+    </div>
+    @if (ShowLoginLink)
+    {
+        <div class="mt-3">
+            <p>
+                <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Login", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">У вас уже есть учетная запись?</a>
+            </p>
+        </div>
+
+    }
+</EditForm>
+
+
+@code {
+
+    [Parameter] public string RoleName { get; set; } = RoleType.Guest.ToString();
+
+    [Parameter] public EventCallback OnSuccess { get; set; }
+
+    [Parameter] public string SubmitButtonText { get; set; } = "Register";
+
+    [Parameter] public bool ShowLoginLink { get; set; } = true;
+
+    [SupplyParameterFromForm]
+    private RegisterUserModel registerUserModel { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private string? _message = null;
+
+    public async Task RegisterUser(EditContext editContext)
+    {
+        var user = CreateUser();
+
+        user.FirstName = registerUserModel.FirstName;
+        user.LastName = registerUserModel.LastName;
+        user.ContactNumber = registerUserModel.ContactNumber;
+        user.Email = registerUserModel.Email;
+        user.RoleName = RoleName;
+
+        var result = await UserService.CreateUserAsync(user, registerUserModel.Email, registerUserModel.Password);
+
+        if (!result.IsSuccess)
+        {
+            _message = result.ErrorMessage;
+            return;
+        }
+
+        Logger.LogInformation($"{user.FullName} создал новую учетную запись {user.Email}");
+
+        await OnSuccess.InvokeAsync();
+    }
+
+    private ApplicationUser CreateUser()
+    {
+        try
+        {
+            return Activator.CreateInstance<ApplicationUser>();
+        }
+        catch
+        {
+            throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
+                $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
+        }
+    }
+}
