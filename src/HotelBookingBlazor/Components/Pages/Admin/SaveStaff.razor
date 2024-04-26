@@ -1,0 +1,26 @@
+﻿@page "/admin/manage-staff/new"
+@page "/admin/manage-staff/new/{id}/edit"
+
+@inject NavigationManager NavigationManager
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1>
+            <NavLink href="admin/manage-staff" class="me-2 btn-sm btn-default">
+                <i class="fa fa-arrow-left"></i>
+            </NavLink>
+            Создать сотрудника
+        </h1>
+    </div>
+    <hr />
+    <CreateUserForm RoleName="@RoleType.Staff.ToString()"
+                    ShowLoginLink=false
+                    SubmitButtonText="Создать сотрудника"
+                    OnSuccess="HandleRegisterSuccess" />
+</div>
+
+
+@code {
+
+    private void HandleRegisterSuccess() => NavigationManager.NavigateTo("admin/manage-staff");
+}
