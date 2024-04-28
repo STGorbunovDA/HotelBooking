@@ -17,7 +17,10 @@
 <StatusMessage Message="@_message" />
 <EditForm Model="registerUserModel" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register" Enhance>
     <DataAnnotationsValidator />
-    <h2>Создать новый аккаунт</h2>
+    @if (ShowSubHeading)
+    {
+        <h2>Создать новый аккаунт</h2>
+    }
     <hr />
 
     <div class="row">
@@ -85,9 +88,11 @@
 
     [Parameter] public EventCallback OnSuccess { get; set; }
 
-    [Parameter] public string SubmitButtonText { get; set; } = "Register";
+    [Parameter] public string SubmitButtonText { get; set; } = "Регистрация";
 
     [Parameter] public bool ShowLoginLink { get; set; } = true;
+
+    [Parameter] public bool ShowSubHeading { get; set; } = true;
 
     [SupplyParameterFromForm]
     private RegisterUserModel registerUserModel { get; set; } = new();
