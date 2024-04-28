@@ -9,7 +9,7 @@ namespace HotelBookingBlazor.Services
     public interface IUserService
     {
         Task<MethodResult<ApplicationUser>> CreateUserAsync(ApplicationUser user, string email, string password);
-        Task<UserDisplayModel[]> GetUserAsync(RoleType? roleType = null);
+        Task<PagedResult<UserDisplayModel>> GetUserAsync(int startIndex, int pageSize, RoleType? roleType = null);
     }
 
     public class UserService : IUserService
@@ -27,16 +27,22 @@ namespace HotelBookingBlazor.Services
             _userStore = userStore;
         }
 
-        public async Task<UserDisplayModel[]> GetUserAsync(RoleType? roleType = null)
+        public async Task<PagedResult<UserDisplayModel>> GetUserAsync(int startIndex, int pageSize, RoleType? roleType = null)
         {
             var query = _userManager.Users;
-            if(roleType is not null)
+            if (roleType is not null)
             {
                 query = query.Where(u => u.RoleName == roleType.ToString());
             }
-            return await query.Select(u => new UserDisplayModel(u.Id, u.FullName, u.Email, 
+
+            var total = await query.CountAsync();
+
+            var records = await query.Select(u => new UserDisplayModel(u.Id, u.FullName, u.Email,
                                       u.RoleName, u.ContactNumber, u.Designation))
-                               .ToArrayAsync();
+                              .Skip(startIndex)
+                              .Take(pageSize)
+                              .ToArrayAsync();
+            return new PagedResult<UserDisplayModel>(total, records);
         }
 
         public async Task<MethodResult<ApplicationUser>> CreateUserAsync(ApplicationUser user,
