@@ -105,7 +105,8 @@
         await SignInManager.SignInWithClaimsAsync(user, Input.RememberMe, additionalClaims);
 
         Logger.LogInformation("User logged in.");
-        RedirectManager.RedirectTo(ReturnUrl);
+        RedirectManager.RedirectTo("/");
+        //RedirectManager.RedirectTo(ReturnUrl);
     }
 
     private sealed class InputModel
