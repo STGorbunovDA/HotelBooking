@@ -4,23 +4,33 @@
 @inject NavigationManager NavigationManager
 
 <div class="container">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center">
         <h1>
             <NavLink href="admin/manage-staff" class="me-2 btn-sm btn-default">
                 <i class="fa fa-arrow-left"></i>
             </NavLink>
-            Создать сотрудника
+            @(!string.IsNullOrWhiteSpace(Id) ? "Изменить" : "Добавить") сотрудника (Администратора)
         </h1>
     </div>
     <hr />
-    <CreateUserForm RoleName="@RoleType.Staff.ToString()"
-                    ShowLoginLink=false
-                    SubmitButtonText="Создать сотрудника"
-                    OnSuccess="HandleRegisterSuccess" />
+    <div class="row d-flex justify-content-center">
+        <div class="col-sm-7">
+            @if (string.IsNullOrWhiteSpace(Id))
+            {
+                <CreateUserForm Role="@RoleType.Staff" OnSuccess="HandleRegisterSuccess" />
+            }
+            else
+            {
+                <EditStaffForm StaffId="@Id" OnSuccess="HandleRegisterSuccess" />
+            }
+
+        </div>
+    </div>
 </div>
 
 
 @code {
-
+    [Parameter] public string? Id { get; set; }
+    // private void HandleRegisterSuccess() => NavigationManager.NavigateTo("/");
     private void HandleRegisterSuccess() => NavigationManager.NavigateTo("admin/manage-staff");
 }
