@@ -1,0 +1,99 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using HotelBookingBlazor.Components.Account.Shared
+
+
+@inject ILogger<EditStaffForm> Logger
+@inject IUserService UserService
+
+
+<StatusMessage Message="@_message" />
+<EditForm Model="Input" method="post" OnValidSubmit="EditStaffAsync" FormName="edit-staff" Enhance>
+    <DataAnnotationsValidator />
+    <hr />
+    <input type="hidden" value="@Input.Id" name="Input.Id" />
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.FirstName" class="form-control" aria-required="true" placeholder="Имя" />
+                <label for="email">Имя</label>
+                <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.LastName" class="form-control" aria-required="true" placeholder="Фамилия" />
+                <label for="email">Фамилия</label>
+                <ValidationMessage For="() => Input.LastName" class="text-danger" />
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.ContactNumber" class="form-control" aria-required="true" placeholder="Номер телефона" />
+                <label for="email">Контактный номер</label>
+                <ValidationMessage For="() => Input.ContactNumber" class="text-danger" />
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="Почта" />
+                <label for="email">Почта</label>
+                <ValidationMessage For="() => Input.Email" class="text-danger" />
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Designation" class="form-control" aria-required="true" placeholder="Назначение" />
+                <label for="designation">Назначение</label>
+                <ValidationMessage For="() => Input.Designation" class="text-danger" />
+            </div>
+        </div>
+    </div>
+    <div>
+        <button type="submit" class="w-100 btn btn-lg btn-primary">Изменить</button>
+    </div>
+</EditForm>
+
+
+@code {
+
+    [CascadingParameter] public HttpContext HttpContext { get; set; }
+
+    [Parameter, EditorRequired] public string StaffId { get; set; }
+
+    [Parameter] public EventCallback OnSuccess { get; set; }
+
+    [SupplyParameterFromForm]
+    private EditStaffModel Input { get; set; } = new();
+
+    private string? _message = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpMethods.IsGet(HttpContext.Request.Method))
+        {
+            var model = await UserService.GetStaffMemberAsync(StaffId);
+            if (model is null)
+            {
+                _message = "Сотрудника не существует";
+                return;
+            }
+            Input = model;
+        }
+
+    }
+
+    public async Task EditStaffAsync(EditContext editContext)
+    {
+        var result = await UserService.UpdateStaffAsync(Input);
+
+        if (!result.IsSucces)
+        {
+            _message = result.ErrorMessage;
+            return;
+        }
+
+        Logger.LogInformation($"Обновлены сведения о сотруднике");
+
+        await OnSuccess.InvokeAsync();
+    }
+}
