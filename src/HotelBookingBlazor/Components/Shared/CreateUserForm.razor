@@ -15,9 +15,9 @@
 
 
 <StatusMessage Message="@_message" />
-<EditForm Model="registerUserModel" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register" Enhance>
+<EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register" Enhance>
     <DataAnnotationsValidator />
-    @if (ShowSubHeading)
+    @if (_showSubHeading)
     {
         <h2>Создать новый аккаунт</h2>
     }
@@ -26,51 +26,61 @@
     <div class="row">
         <div class="col-sm-6">
             <div class="form-floating mb-3">
-                <InputText @bind-Value="registerUserModel.FirstName" class="form-control" aria-required="true" placeholder="Имя" />
+                <InputText @bind-Value="Input.FirstName" class="form-control" aria-required="true" placeholder="Имя" />
                 <label for="email">Имя</label>
-                <ValidationMessage For="() => registerUserModel.FirstName" class="text-danger" />
+                <ValidationMessage For="() => Input.FirstName" class="text-danger" />
             </div>
         </div>
         <div class="col-sm-6">
             <div class="form-floating mb-3">
-                <InputText @bind-Value="registerUserModel.LastName" class="form-control" aria-required="true" placeholder="Фамилия" />
+                <InputText @bind-Value="Input.LastName" class="form-control" aria-required="true" placeholder="Фамилия" />
                 <label for="email">Фамилия</label>
-                <ValidationMessage For="() => registerUserModel.LastName" class="text-danger" />
+                <ValidationMessage For="() => Input.LastName" class="text-danger" />
             </div>
         </div>
         <div class="col-sm-6">
             <div class="form-floating mb-3">
-                <InputText @bind-Value="registerUserModel.ContactNumber" class="form-control" aria-required="true" placeholder="Номер телефона" />
+                <InputText @bind-Value="Input.ContactNumber" class="form-control" aria-required="true" placeholder="Номер телефона" />
                 <label for="email">Контактный номер</label>
-                <ValidationMessage For="() => registerUserModel.ContactNumber" class="text-danger" />
+                <ValidationMessage For="() => Input.ContactNumber" class="text-danger" />
             </div>
         </div>
         <div class="col-sm-6">
             <div class="form-floating mb-3">
-                <InputText @bind-Value="registerUserModel.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="Почта" />
+                <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="Почта" />
                 <label for="email">Почта</label>
-                <ValidationMessage For="() => registerUserModel.Email" class="text-danger" />
+                <ValidationMessage For="() => Input.Email" class="text-danger" />
             </div>
         </div>
         <div class="col-sm-6">
             <div class="form-floating mb-3">
-                <InputText type="password" @bind-Value="registerUserModel.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Пароль" />
+                <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Пароль" />
                 <label for="password">Пароль</label>
-                <ValidationMessage For="() => registerUserModel.Password" class="text-danger" />
+                <ValidationMessage For="() => Input.Password" class="text-danger" />
             </div>
         </div>
         <div class="col-sm-6">
             <div class="form-floating mb-3">
-                <InputText type="password" @bind-Value="registerUserModel.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Подтверждение пароля" />
+                <InputText type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Подтверждение пароля" />
                 <label for="confirm-password">Подтверждение пароля</label>
-                <ValidationMessage For="() => registerUserModel.ConfirmPassword" class="text-danger" />
+                <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
             </div>
         </div>
+        @if (_showDesignation)
+        {
+            <div class="col-sm-6">
+                <div class="form-floating mb-3">
+                    <InputText type="password" @bind-Value="Input.Designation" class="form-control" placeholder="Назначение" />
+                    <label for="designation">Назначение</label>
+                    <ValidationMessage For="() => Input.Designation" class="text-danger" />
+                </div>
+            </div>
+        }
     </div>
     <div>
-        <button type="submit" class="w-100 btn btn-lg btn-primary">@SubmitButtonText</button>
+        <button type="submit" class="w-100 btn btn-lg btn-primary">@_submitButtonText </button>
     </div>
-    @if (ShowLoginLink)
+    @if (_showLoginLink)
     {
         <div class="mt-3">
             <p>
@@ -84,35 +94,48 @@
 
 @code {
 
-    [Parameter] public string RoleName { get; set; } = RoleType.Guest.ToString();
+    [Parameter] public RoleType Role { get; set; } = RoleType.Guest;
 
     [Parameter] public EventCallback OnSuccess { get; set; }
 
-    [Parameter] public string SubmitButtonText { get; set; } = "Регистрация";
+    private string _submitButtonText = "Регистрация";
 
-    [Parameter] public bool ShowLoginLink { get; set; } = true;
+    private bool _showLoginLink = true;
 
-    [Parameter] public bool ShowSubHeading { get; set; } = true;
+    private bool _showSubHeading = true;
+
+    private bool _showDesignation = false;
 
     [SupplyParameterFromForm]
-    private RegisterUserModel registerUserModel { get; set; } = new();
+    private RegisterUserModel Input { get; set; } = new();
 
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
     private string? _message = null;
 
+    protected override void OnParametersSet()
+    {
+        if (Role != RoleType.Guest)
+        {
+            _submitButtonText = "Создать сотрудника";
+            _showLoginLink = _showSubHeading = false;
+            _showDesignation = true;
+        }
+    }
+
     public async Task RegisterUser(EditContext editContext)
     {
         var user = CreateUser();
 
-        user.FirstName = registerUserModel.FirstName;
-        user.LastName = registerUserModel.LastName;
-        user.ContactNumber = registerUserModel.ContactNumber;
-        user.Email = registerUserModel.Email;
-        user.RoleName = RoleName;
+        user.FirstName = Input.FirstName;
+        user.LastName = Input.LastName;
+        user.ContactNumber = Input.ContactNumber;
+        user.Email = Input.Email;
+        user.RoleName = Role.ToString();
+        user.Designation = Input.Designation;
 
-        var result = await UserService.CreateUserAsync(user, registerUserModel.Email, registerUserModel.Password);
+        var result = await UserService.CreateUserAsync(user, Input.Email, Input.Password);
 
         if (!result.IsSuccess)
         {
@@ -133,8 +156,8 @@
         }
         catch
         {
-            throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
-                $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
+            throw new InvalidOperationException($"Не удается создать экземпляр '{nameof(ApplicationUser)}'. " +
+                $"Убедитесь, что '{nameof(ApplicationUser)}' не является абстрактным классом и имеет конструктор без параметров.");
         }
     }
 }
