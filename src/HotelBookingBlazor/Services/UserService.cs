@@ -10,6 +10,8 @@ namespace HotelBookingBlazor.Services
     {
         Task<MethodResult<ApplicationUser>> CreateUserAsync(ApplicationUser user, string email, string password);
         Task<PagedResult<UserDisplayModel>> GetUserAsync(int startIndex, int pageSize, RoleType? roleType = null);
+        Task<EditStaffModel?> GetStaffMemberAsync(string staffId);
+        Task<MethodResult> UpdateStaffAsync(EditStaffModel model);
     }
 
     public class UserService : IUserService
@@ -67,16 +69,69 @@ namespace HotelBookingBlazor.Services
             return user;
         }
 
-        //public async Task<MethodResult> UpdateUserAsync(ApplicationUser user)
-        //{
+        public async Task<EditStaffModel?> GetStaffMemberAsync(string staffId) =>
+                     await GetStaff(staffId)
+                            .Select(u => new EditStaffModel
+                            {
+                                Id = u.Id,
+                                ContactNumber = u.ContactNumber,
+                                Designation = u.Designation,
+                                Email = u.Email,
+                                FirstName = u.FirstName,
+                                LastName = u.LastName,
+                            }).FirstOrDefaultAsync();
 
-        //}
+        private IQueryable<ApplicationUser> GetStaff(string staffId) =>
+                        _userManager.Users
+                        .Where(u => u.Id == staffId && u.RoleName == RoleType.Staff.ToString());
+
+        public async Task<MethodResult> UpdateStaffAsync(EditStaffModel model)
+        {
+            var dbUser = await GetStaff(model.Id).FirstOrDefaultAsync();
+            if (dbUser is null)
+            {
+                return "Invalid request";
+            }
+
+            dbUser.UserName = model.Email; // костыль
+            dbUser.FirstName = model.FirstName;
+            dbUser.LastName = model.LastName;
+            dbUser.Designation = model.Designation;
+            dbUser.ContactNumber = model.ContactNumber;
+
+            var result = await _userManager.UpdateAsync(dbUser);
+
+            if (!result.Succeeded)
+            {
+                return $"Error: {string.Join(", ", result.Errors.Select(error => error.Description))}";
+            }
+
+            if (dbUser.Email.Equals(model.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                // Если Администратор не менял адрес электронной почты,
+                // то возвращаемся
+                return true;
+            }
+
+            // Администратор изменил электронный адрес сотрудника
+
+            var changeToken = await _userManager.GenerateChangeEmailTokenAsync(dbUser, model.Email);
+
+            result = await _userManager.ChangeEmailAsync(dbUser, model.Email, changeToken);
+
+            if (!result.Succeeded)
+            {
+                return $"Error: {string.Join(", ", result.Errors.Select(error => error.Description))}";
+            }
+
+            return true;
+        }
 
         private IUserEmailStore<ApplicationUser> GetEmailStore()
         {
             if (!_userManager.SupportsUserEmail)
             {
-                throw new NotSupportedException("The default UI requires a user store with email support.");
+                throw new NotSupportedException("Пользовательский интерфейс по умолчанию требует наличия пользовательского хранилища с поддержкой электронной почты.");
             }
             return (IUserEmailStore<ApplicationUser>)_userStore;
         }
