@@ -4,10 +4,10 @@ namespace HotelBookingBlazor.Models
 {
     public class RegisterUserModel
     {
-        [Required, MaxLength(15), RegularExpression(@"[а-яА-Я]+$")]
+        [Required, MaxLength(10), RegularExpression(@"[а-яА-Я]+$")]
         public string FirstName { get; set; } = "";
 
-        [MaxLength(15), RegularExpression(@"[а-яА-Я]+$")]
+        [MaxLength(10), RegularExpression(@"[а-яА-Я]+$")]
         public string? LastName { get; set; } = "";
 
         [Required]
@@ -28,5 +28,8 @@ namespace HotelBookingBlazor.Models
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "Пароли не совпадают")]
         public string ConfirmPassword { get; set; } = "";
+
+        [MaxLength(50)]
+        public string? Designation { get; set; }
     }
 }
