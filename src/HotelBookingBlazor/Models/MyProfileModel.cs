@@ -2,14 +2,14 @@
 
 namespace HotelBookingBlazor.Models
 {
-    public class EditStaffModel
+    public class MyProfileModel
     {
         public string Id { get; set; }
 
-        [Required, MaxLength(10), RegularExpression(@"[а-яА-Я]+$")]
+        [Required, MaxLength(10), RegularExpression(@"^[a-zA-Zа-яА-Я]+$")]
         public string FirstName { get; set; } = "";
 
-        [MaxLength(10), RegularExpression(@"[а-яА-Я]+$")]
+        [MaxLength(10), RegularExpression(@"^[a-zA-Zа-яА-Я]+$")]
         public string? LastName { get; set; } = "";
 
         [Required]
