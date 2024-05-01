@@ -107,11 +107,11 @@
     {
         var amenities = await AmenitiesService.GetAmenitiesAsync();
 
-        if(RooTypeId.HasValue)
+        if (RooTypeId.HasValue)
         {
             var roomType = await RoomTypeService.GetRoomTypeToEditAsync(RooTypeId.Value);
 
-            if(roomType is null)
+            if (roomType is null)
             {
                 NavigationManager.NavigateTo("/staff-admin/manage-room-types", replace: true);
                 return;
@@ -133,7 +133,7 @@
     {
         _errorMessage = null;
 
-        if (_image is null)
+        if (Model.Id == 0 && _image is null)
         {
             _errorMessage = "Требуется изображение";
         }
@@ -153,10 +153,13 @@
 
         try
         {
-            var existingImageUrl = Model.Image;
-            var imageUrl = await SaveImageAsync();
-            if (imageUrl is null) return;
-            Model.Image = imageUrl;
+            string? existingImageUrl = null;
+            if (_image is not null)
+            {
+                var imageUrl = await SaveImageAsync();
+                if (imageUrl is null) return;
+                Model.Image = imageUrl;
+            }
 
             var result = await RoomTypeService.SaveRoomTypeAsync(Model, userId);
 
@@ -233,7 +236,7 @@
 
         var fullFilePath = rootPath + imagePath;
 
-        if(File.Exists(fullFilePath))
+        if (File.Exists(fullFilePath))
         {
             try
             {
@@ -246,7 +249,7 @@
                 _errorMessage = $"Ошибка удаления изображения. {ex.Message}";
                 return false;
             }
-            
+
         }
         return false;
     }

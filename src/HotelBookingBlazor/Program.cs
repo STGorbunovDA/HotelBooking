@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using HotelBookingBlazor.Services;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using HotelBookingBlazor.Endpoints;
+using HotelBookingBlazor.Services.Public;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,7 +42,8 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 builder.Services.AddTransient<SeedService>()
                 .AddTransient<IAmenitiesService, AmenitiesService>()
                 .AddTransient<IRoomTypeService, RoomTypeService>()
-                .AddTransient<IUserService, UserService>();
+                .AddTransient<IUserService, UserService>()
+                .AddTransient<IRoomsService, RoomsService>();
 
 var app = builder.Build();
 
