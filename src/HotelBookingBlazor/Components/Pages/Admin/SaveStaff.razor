@@ -21,7 +21,7 @@
             }
             else
             {
-                <EditStaffForm StaffId="@Id" OnSuccess="HandleRegisterSuccess" />
+                <EditProfileForm UserId="@Id" Role="@RoleType.Staff" OnSuccess="HandleRegisterSuccess" />
             }
 
         </div>
@@ -31,6 +31,5 @@
 
 @code {
     [Parameter] public string? Id { get; set; }
-    // private void HandleRegisterSuccess() => NavigationManager.NavigateTo("/");
     private void HandleRegisterSuccess() => NavigationManager.NavigateTo("admin/manage-staff");
 }

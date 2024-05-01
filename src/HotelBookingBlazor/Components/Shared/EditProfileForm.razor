@@ -2,12 +2,12 @@
 @using HotelBookingBlazor.Components.Account.Shared
 
 
-@inject ILogger<EditStaffForm> Logger
+@inject ILogger<EditProfileForm> Logger
 @inject IUserService UserService
 
 
 <StatusMessage Message="@_message" />
-<EditForm Model="Input" method="post" OnValidSubmit="EditStaffAsync" FormName="edit-staff" Enhance>
+<EditForm Model="Input" method="post" OnValidSubmit="EditProfileAsync" FormName="edit-profile" Enhance>
     <DataAnnotationsValidator />
     <hr />
     <input type="hidden" value="@Input.Id" name="Input.Id" />
@@ -40,16 +40,23 @@
                 <ValidationMessage For="() => Input.Email" class="text-danger" />
             </div>
         </div>
-        <div class="col-sm-6">
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Designation" class="form-control" aria-required="true" placeholder="Назначение" />
-                <label for="designation">Назначение</label>
-                <ValidationMessage For="() => Input.Designation" class="text-danger" />
+        @if (Role.HasValue && Role != RoleType.Guest)
+        {
+            <div class="col-sm-6">
+                <div class="form-floating mb-3">
+                    <InputText @bind-Value="Input.Designation" class="form-control" aria-required="true" placeholder="Назначение" />
+                    <label for="designation">Назначение</label>
+                    <ValidationMessage For="() => Input.Designation" class="text-danger" />
+                </div>
             </div>
-        </div>
+        }
+        else
+        {
+            <input type="hidden" value="@Input.Designation" name="Input.Designation" />
+        }
     </div>
     <div>
-        <button type="submit" class="w-100 btn btn-lg btn-primary">Изменить</button>
+        <button type="submit" class="w-100 btn btn-lg btn-primary">Обновить профиль</button>
     </div>
 </EditForm>
 
@@ -58,12 +65,14 @@
 
     [CascadingParameter] public HttpContext HttpContext { get; set; }
 
-    [Parameter, EditorRequired] public string StaffId { get; set; }
+    [Parameter, EditorRequired] public string UserId { get; set; }
+
+    [Parameter] public RoleType? Role { get; set; }
 
     [Parameter] public EventCallback OnSuccess { get; set; }
 
     [SupplyParameterFromForm]
-    private EditStaffModel Input { get; set; } = new();
+    private MyProfileModel Input { get; set; } = new();
 
     private string? _message = null;
 
@@ -71,10 +80,10 @@
     {
         if (HttpMethods.IsGet(HttpContext.Request.Method))
         {
-            var model = await UserService.GetStaffMemberAsync(StaffId);
+            var model = await UserService.GetProfileDetailsAsync(UserId);
             if (model is null)
             {
-                _message = "Сотрудника не существует";
+                _message = "Пользователя  не существует";
                 return;
             }
             Input = model;
@@ -82,9 +91,9 @@
 
     }
 
-    public async Task EditStaffAsync(EditContext editContext)
+    public async Task EditProfileAsync(EditContext editContext)
     {
-        var result = await UserService.UpdateStaffAsync(Input);
+        var result = await UserService.UpdateProfileAsync(Input, Role);
 
         if (!result.IsSucces)
         {
@@ -92,7 +101,7 @@
             return;
         }
 
-        Logger.LogInformation($"Обновлены сведения о сотруднике");
+        Logger.LogInformation($"Обновлены сведения о пользователе");
 
         await OnSuccess.InvokeAsync();
     }
