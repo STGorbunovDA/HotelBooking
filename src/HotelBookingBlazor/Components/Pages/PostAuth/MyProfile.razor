@@ -1,0 +1,45 @@
+﻿@page "/my-profile"
+
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="container">
+    <h1>Мой профиль</h1>
+    <hr />
+    <div class="row d-flex justify-content-center">
+        <div class="col-sm-7">
+            @if (!string.IsNullOrWhiteSpace(_message))
+            {
+                <p class="text-success">
+                    @_message
+                </p>
+            }
+
+            @if (_userId is not null)
+            {
+                <EditProfileForm UserId="@_userId" OnSuccess="HandleSuccess" />
+            }
+
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? _message;
+
+    private string? _userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (authState is null || authState.User.Identities is null || !authState.User.Identity.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        _userId = authState.User.GetUserId()!;
+    }
+
+    private void HandleSuccess() => _message = "Профиль успешно обновлен";
+}

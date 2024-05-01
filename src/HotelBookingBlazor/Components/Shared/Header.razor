@@ -60,24 +60,26 @@
                                     @* <label>@string.Join(Environment.NewLine, context.User.Claims.Select(c => $"{c.Type}={c.Value}"))</label> *@
                                     <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">@context.User.FindFirst(AppConstans.CustomClaimTypes.FullName)?.Value</a>
                                     <div class="dropdown-menu rounded-0 m-0">
-                                       
-                                        <NavLink href="booking" class="dropdown-item">Мой профиль</NavLink>
+
+                                        <NavLink href="/my-profile" class="dropdown-item">Мой профиль</NavLink>
 
                                         <AuthorizeView Roles="@RoleType.Guest.ToString()" Context="guestContext">
                                             <NavLink href="booking" class="dropdown-item">Мои бронирования</NavLink>
                                         </AuthorizeView>
 
-                                        <AuthorizeView Roles="Admin"  Context="adminContext">
+                                        <AuthorizeView Roles="Admin" Context="adminContext">
                                             <NavLink href="admin/manage-staff" class="dropdown-item"> + Управление сотрудниками</NavLink>
                                             <NavLink href="admin/manage-staff/new" class="dropdown-item"> + Добавление сотрудников</NavLink>
                                         </AuthorizeView>
 
-                                        <AuthorizeView Roles="Staff,Admin"  Context="staffAdminContext">
+                                        <AuthorizeView Roles="Staff,Admin" Context="staffAdminContext">
                                             <NavLink href="/booking" class="dropdown-item">Управление бронированием</NavLink>
                                             <NavLink href="/staff-admin/manage-room-types" Match="NavLinkMatch.All" class="dropdown-item">Управление номерами</NavLink>
                                             <NavLink href="/staff-admin/manage-room-types/new" class="dropdown-item">Добавить типы комнат</NavLink>
                                             <NavLink href="/staff-admin/manage-amenities" class="dropdown-item">Управление удобствами</NavLink>
                                         </AuthorizeView>
+
+                                        <NavLink href="change-password" class="dropdown-item">Изменить пароль</NavLink>
                                     </div>
                                 </div>
                             </Authorized>
