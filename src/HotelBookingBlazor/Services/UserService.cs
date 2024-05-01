@@ -10,8 +10,8 @@ namespace HotelBookingBlazor.Services
     {
         Task<MethodResult<ApplicationUser>> CreateUserAsync(ApplicationUser user, string email, string password);
         Task<PagedResult<UserDisplayModel>> GetUserAsync(int startIndex, int pageSize, RoleType? roleType = null);
-        Task<EditStaffModel?> GetStaffMemberAsync(string staffId);
-        Task<MethodResult> UpdateStaffAsync(EditStaffModel model);
+        Task<MyProfileModel?> GetProfileDetailsAsync(string userId);
+        Task<MethodResult> UpdateProfileAsync(MyProfileModel model, RoleType? roleType = null);
     }
 
     public class UserService : IUserService
@@ -69,9 +69,9 @@ namespace HotelBookingBlazor.Services
             return user;
         }
 
-        public async Task<EditStaffModel?> GetStaffMemberAsync(string staffId) =>
-                     await GetStaff(staffId)
-                            .Select(u => new EditStaffModel
+        public async Task<MyProfileModel?> GetProfileDetailsAsync(string userId) =>
+                     await GetUser(userId)
+                            .Select(u => new MyProfileModel
                             {
                                 Id = u.Id,
                                 ContactNumber = u.ContactNumber,
@@ -81,13 +81,21 @@ namespace HotelBookingBlazor.Services
                                 LastName = u.LastName,
                             }).FirstOrDefaultAsync();
 
-        private IQueryable<ApplicationUser> GetStaff(string staffId) =>
-                        _userManager.Users
-                        .Where(u => u.Id == staffId && u.RoleName == RoleType.Staff.ToString());
-
-        public async Task<MethodResult> UpdateStaffAsync(EditStaffModel model)
+        private IQueryable<ApplicationUser> GetUser(string userId, RoleType? roleType = null)
         {
-            var dbUser = await GetStaff(model.Id).FirstOrDefaultAsync();
+            var query = _userManager.Users
+                        .Where(u => u.Id == userId);
+            if(roleType is not null)
+            {
+                query = query.Where(u => u.RoleName == RoleType.Staff.ToString());
+            }
+            return query;
+        }              
+
+        public async Task<MethodResult> UpdateProfileAsync(MyProfileModel model, RoleType? roleType = null)
+        {
+            var dbUser = await GetUser(model.Id, roleType)
+                               .FirstOrDefaultAsync();
             if (dbUser is null)
             {
                 return "Invalid request";
