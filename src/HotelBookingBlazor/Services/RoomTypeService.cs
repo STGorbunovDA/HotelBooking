@@ -45,7 +45,7 @@ namespace HotelBookingBlazor.Services
                     AddedOn = DateTime.Now,
                     Description = model.Description,
                     Image = model.Image,
-                    IsActive = model.IsActive,
+                    IsActive = true, // model.IsActive,
                     MaxAdults = model.MaxAdults,
                     MaxChildren = model.MaxChildren,
                     Price = model.Price,
@@ -72,7 +72,7 @@ namespace HotelBookingBlazor.Services
                 roomType.Name = model.Name;
                 roomType.Description = model.Description;
                 roomType.Image = model.Image;
-                roomType.IsActive = model.IsActive;
+                roomType.IsActive = true;// model.IsActive;
                 roomType.MaxAdults = model.MaxAdults;
                 roomType.MaxChildren = model.MaxChildren;
                 roomType.Price = model.Price;
@@ -123,7 +123,7 @@ namespace HotelBookingBlazor.Services
                                       Image = rt.Image,
                                       Price = rt.Price,
                                       Description = rt.Description,
-                                      IsActive = rt.IsActive,
+                                      IsActive = true, // rt.IsActive
                                       Id = rt.Id,
                                       MaxAdults = rt.MaxAdults,
                                       MaxChildren = rt.MaxChildren,
