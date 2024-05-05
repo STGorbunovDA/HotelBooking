@@ -1,5 +1,4 @@
-﻿using HotelBookingBlazor.Components.Pages;
-using HotelBookingBlazor.Data;
+﻿using HotelBookingBlazor.Data;
 using HotelBookingBlazor.Data.Entities;
 using HotelBookingBlazor.Models;
 using Microsoft.EntityFrameworkCore;
