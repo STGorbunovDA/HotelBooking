@@ -2,13 +2,35 @@
 
 @layout InnerPageLayout
 
+@inject IRoomsService RoomsService
+
 <Microsoft.AspNetCore.Components.Sections.SectionContent SectionName="PageName">
     Комнаты
 </Microsoft.AspNetCore.Components.Sections.SectionContent>
 
-<RoomsSection />
+<RoomsSection RoomTypes="_rooms"/>
 <Testimonials />
 
 @code {
 
+    [SupplyParameterFromQuery]
+    public DateOnly? CheckInDate { get; set; } 
+
+    [SupplyParameterFromQuery]
+    public DateOnly? CheckOutDate { get; set; }
+
+    [SupplyParameterFromQuery]
+    public int? Adults { get; set; } = 0;
+
+    [SupplyParameterFromQuery]
+    public int? Children { get; set; } = 0;
+
+    private RoomTypeModel[] _rooms = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var filterModel = FilterModel.GetFilterModel(CheckInDate, CheckOutDate, Adults, Children);
+
+        _rooms = await RoomsService.GetRoomTypesAsync(filter: filterModel);
+    }
 }

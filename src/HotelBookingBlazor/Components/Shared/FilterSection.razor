@@ -1,0 +1,89 @@
+﻿@inject NavigationManager NavigationManager
+
+<EditForm Model="Model" Enhance FormName="filter-from" OnSubmit="HandleFilter">
+     <div class="container-fluid booking pb-5 wow fadeIn" data-wow-delay="0.1s">
+         <div class="container">
+             <div class="bg-white shadow" style="padding: 35px;">
+                 <div class="row g-2">
+                     <div class="col-md-10">
+                         <div class="row g-2">
+                             <div class="col-md-3">
+                                 <div class="date" id="date1" data-target-input="nearest">
+                                     <InputDate @bind-Value="Model.CheckInDate" 
+                                                class="form-control datetimepicker-input"
+                                                placeholder="Дата заезда" data-target="#date1"
+                                                data-toggle="datetimepicker" />
+                                 </div>
+                             </div>
+                             <div class="col-md-3">
+                                 <div class="date" id="date2" data-target-input="nearest">
+                                     <InputDate @bind-Value="Model.CheckOutDate"
+                                                class="form-control datetimepicker-input"
+                                                placeholder="Дата выезда" data-target="#date2" 
+                                                data-toggle="datetimepicker" />
+                                 </div>
+                             </div>
+                             <div class="col-md-3">
+                                 <InputSelect @bind-Value="Model.Adults" class="form-select">
+                                    @for(int i = 0; i < 6; i++)
+                                    {
+                                        <option value="@i">@i @(i > 1 ? "Взрослых" : "Взрослый")</option>
+                                    }
+                                 </InputSelect>
+                             </div>
+                             <div class="col-md-3">
+                                <InputSelect @bind-Value="Model.Children" class="form-select">
+                                    @for (int i = 0; i < 6; i++)
+                                    {
+                                        <option value="@i">@i @(i > 1 ? "Ребёнка": "Ребёнок")</option>
+                                    }
+                                </InputSelect>
+                             </div>
+                         </div>
+                     </div>
+                     <div class="col-md-2">
+                         <button type="submit" class="btn btn-primary w-100">Поиск</button>
+                     </div>
+                 </div>
+             </div>
+         </div>
+     </div>
+ </EditForm>
+
+@code {
+    [SupplyParameterFromForm]
+    public FilterModel Model { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    public DateOnly? CheckInDate { get; set; }
+
+    [SupplyParameterFromQuery]
+    public DateOnly? CheckOutDate { get; set; }
+
+    [SupplyParameterFromQuery]
+    public int? Adults { get; set; } = 0;
+
+    [SupplyParameterFromQuery]
+    public int? Children { get; set; } = 0;
+
+    [CascadingParameter]
+    public HttpContext HttpContext { get; set; } = default;
+
+    protected override void OnInitialized()
+    {
+        if(HttpMethods.IsGet(HttpContext.Request.Method))
+        {
+            Model.CheckInDate = CheckInDate;
+            Model.CheckOutDate = CheckOutDate;
+            Model.Adults = Adults;
+            Model.Children = Children;
+
+        }
+    }
+
+    private void HandleFilter()
+    {
+        var roomsPageUri = NavigationManager.GetUriWithQueryParameters("/rooms", Model.ToDictionary());
+        NavigationManager.NavigateTo(roomsPageUri);
+    }
+}
