@@ -1,4 +1,4 @@
-﻿namespace HotelBookingBlazor.Services.Public
+﻿namespace HotelBookingBlazor.Models.Public
 {
     public class FilterModel
     {
