@@ -7,6 +7,7 @@ namespace HotelBookingBlazor.Services.Public
     public interface IRoomsService
     {
         Task<RoomTypeModel[]> GetRoomTypesAsync(int count = 0, FilterModel filter = null);
+        Task<LookupModel<short>[]> GetRoomTypesLookup();
     }
 
     public class RoomsService : IRoomsService
@@ -54,6 +55,15 @@ namespace HotelBookingBlazor.Services.Public
                                             a.Amenity.Name,
                                             a.Amenity.Icon,
                                             a.Unit)).ToArray())).ToArrayAsync();
+        }
+
+        public async Task<LookupModel<short>[]> GetRoomTypesLookup()
+        {
+            using var context = _contextFactory.CreateDbContext();
+            return await context.RoomTypes
+                                .Where(rt => rt.IsActive)
+                                .Select(rt => new LookupModel<short>(rt.Id, rt.Name))
+                                .ToArrayAsync();
         }
     }
 }
