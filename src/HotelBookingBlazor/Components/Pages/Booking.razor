@@ -1,10 +1,12 @@
 ﻿@page "/booking"
+@using HotelBookingBlazor.Data
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 @layout InnerPageLayout
 
 @inject IRoomsService RoomsService
+@inject IUserService UserService
 
 @inject AuthenticationStateProvider AuthStateProvider
 
@@ -39,7 +41,7 @@
             </div>
             <div class="col-lg-6">
                 <div class="wow fadeInUp" data-wow-delay="0.2s">
-                    <EditForm Model="_model">
+                    <EditForm Model="_model" OnValidSubmit="BookRoomAsync">
                         <DataAnnotationsValidator />
                         <div class="row g-3">
                             @if (!_isAuthenticated)
@@ -89,7 +91,6 @@
                                 </div>
                             }
 
-
                             <div class="col-md-6">
                                 <div class="form-floating date" id="date3" data-target-input="nearest">
                                     <InputDate @bind-Value="_model.CheckInDate" class="form-control datetimepicker-input" id="checkin" placeholder="Дата заезда" data-target="#date3" data-toggle="datetimepicker" />
@@ -106,7 +107,10 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating">
-                                    <InputSelect @bind-Value="_model.Adults" class="form-select" id="select1">
+                                    <InputSelect ValueExpression="() => _model.Adults"
+                                                 ValueChanged="(int? newAdults) => HandleAdultsChange(newAdults)"
+                                                 class="form-select"
+                                                 id="select1">
                                         @for (int i = 0; i < 6; i++)
                                         {
                                             <option value="@i">@i @(i > 1 ? "Взрослых" : "Взрослый")</option>
@@ -118,7 +122,9 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating">
-                                    <InputSelect @bind-Value="_model.Children" class="form-select" id="select2">
+                                    <InputSelect ValueExpression="() => _model.Children"
+                                                 ValueChanged="(int? newChildrenValue) => HandleChildrenChange(newChildrenValue)"
+                                        class="form-select" id="select2">
                                         @for (int i = 0; i < 6; i++)
                                         {
                                             <option value="@i">@i @(i > 1 ? "Ребёнка" : "Ребёнок")</option>
@@ -162,13 +168,15 @@
 
 @code {
     [SupplyParameterFromQuery(Name = "room-type")]
-        public string? SelectedRoomType { get; set; }
+    public string? SelectedRoomType { get; set; }
 
     private BookingModel _model = new();
 
     private LookupModel<short>[] _roomTypes = [];
 
     private bool _isAuthenticated;
+    private string? _userId;
+    private string? _errorMessage;
     protected override async Task OnInitializedAsync()
     {
         var roomTypesTask = RoomsService.GetRoomTypesLookup();
@@ -178,6 +186,7 @@
             // user is logged in
             // fetch use details from AuthState claims
             _isAuthenticated = true;
+            _userId = authState.User.GetUserId();
             _model.SetDummyValues();
         }
 
@@ -189,5 +198,74 @@
         {
             _model.RoomTypeId = roomTypeId;
         }
+    }
+
+    private FilterModel? _filterModel = new();
+    private async Task FilterRoomTypes()
+    {
+        _roomTypes = await RoomsService.GetRoomTypesLookup(_filterModel);
+    }
+
+    private async Task HandleAdultsChange(int? newAdults)
+    {
+        _model.Adults = newAdults;
+        _filterModel.Adults = _model.Adults;
+        await FilterRoomTypes();
+    }
+
+    private async Task HandleChildrenChange(int? newValue)
+    {
+        _model.Children = newValue;
+        _filterModel.Children = _model.Children;
+        await FilterRoomTypes();
+    }
+
+    private async Task BookRoomAsync()
+    {
+        string? userId = _userId;
+        if(!_isAuthenticated)
+        {
+            // Register this user as guest
+            userId = await RegisterUserAsync();
+            if(userId is null)
+            {
+                return;
+            }
+        }
+        // Make Booking here
+        await MakeBooking(userId!);
+
+        // Redirect user to Stripe Payment Page
+        await PayNowAsync();
+    }
+
+    private async Task<string?> RegisterUserAsync()
+    {
+        var user = new ApplicationUser();
+
+        user.FirstName = _model.FirstName;
+        user.LastName = _model.LastName;
+        user.ContactNumber = _model.ContactNumber;
+        user.Email = _model.Email;
+        user.RoleName = RoleType.Guest.ToString();
+
+        var result = await UserService.CreateUserAsync(user, _model.Email, _model.Password);
+
+        if (!result.IsSuccess)
+        {
+            _errorMessage = result.ErrorMessage;
+            return null;
+        }
+        return result.Data.Id;
+    }
+
+    private async Task MakeBooking(string userId)
+    {
+
+    }
+
+    private async Task PayNowAsync()
+    {
+        
     }
 }
