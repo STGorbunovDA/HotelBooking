@@ -8,7 +8,7 @@ namespace HotelBookingBlazor.Services.Public
     public interface IRoomsService
     {
         Task<RoomTypeModel[]> GetRoomTypesAsync(int count = 0, FilterModel filter = null);
-        Task<LookupModel<short>[]> GetRoomTypesLookup(FilterModel? filter = null);
+        Task<LookupModel<short, decimal>[]> GetRoomTypesLookup(FilterModel? filter = null);
     }
 
     public class RoomsService : IRoomsService
@@ -43,12 +43,12 @@ namespace HotelBookingBlazor.Services.Public
                                             a.Unit)).ToArray())).ToArrayAsync();
         }
 
-        public async Task<LookupModel<short>[]> GetRoomTypesLookup(FilterModel filter = null)
+        public async Task<LookupModel<short, decimal>[]> GetRoomTypesLookup(FilterModel filter = null)
         {
             using var context = _contextFactory.CreateDbContext();
             var query = ApplyFilter(context.RoomTypes, filter);
 
-            return await query.Select(rt => new LookupModel<short>(rt.Id, rt.Name))
+            return await query.Select(rt => new LookupModel<short, decimal>(rt.Id, rt.Name, rt.Price))
                                 .ToArrayAsync();
         }
 

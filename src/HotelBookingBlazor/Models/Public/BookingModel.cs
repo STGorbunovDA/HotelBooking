@@ -40,6 +40,8 @@ namespace HotelBookingBlazor.Models.Public
         [MaxLength(150)]
         public string? SpecialRequest { get; set; }
 
+        public decimal Amount { get; set; }
+
         public void SetDummyValues()
         {
             // используем это только для обхода проверки DataAnnotation
