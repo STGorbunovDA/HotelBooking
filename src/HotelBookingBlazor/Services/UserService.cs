@@ -50,6 +50,13 @@ namespace HotelBookingBlazor.Services
         public async Task<MethodResult<ApplicationUser>> CreateUserAsync(ApplicationUser user,
             string email, string password)
         {
+            var existingUser = await _userManager.FindByIdAsync(user.Id);   
+
+            if(existingUser is not null)
+            {
+                return new MethodResult<ApplicationUser>(false, "Email exists already", existingUser);
+            }
+
             await _userStore.SetUserNameAsync(user, email, CancellationToken.None);
             var emailStore = GetEmailStore();
             await emailStore.SetEmailAsync(user, user.Email, CancellationToken.None);
