@@ -7,8 +7,12 @@
 
 @inject IRoomsService RoomsService
 @inject IUserService UserService
+@inject IBookingService BookingService
+@inject IPaymentService PaymentService
+
 
 @inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
 
 <Microsoft.AspNetCore.Components.Sections.SectionContent SectionName="PageName">
     Бронирование
@@ -84,7 +88,7 @@
 
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <InputText type="confirmPassword" @bind-Value="_model.ConfirmPassword" class="form-control" id="confirmPassword" placeholder="Подтверждение пароля" />
+                                        <InputText type="password" @bind-Value="_model.ConfirmPassword" class="form-control" id="confirmPassword" placeholder="Подтверждение пароля" />
                                         <label for="confirmPassword">Подтверждение пароля</label>
                                     </div>
                                     <ValidationMessage For="() => _model.ConfirmPassword" class="text-danger" />
@@ -124,7 +128,7 @@
                                 <div class="form-floating">
                                     <InputSelect ValueExpression="() => _model.Children"
                                                  ValueChanged="(int? newChildrenValue) => HandleChildrenChange(newChildrenValue)"
-                                        class="form-select" id="select2">
+                                                 class="form-select" id="select2">
                                         @for (int i = 0; i < 6; i++)
                                         {
                                             <option value="@i">@i @(i > 1 ? "Ребёнка" : "Ребёнок")</option>
@@ -136,11 +140,13 @@
                             </div>
                             <div class="col-12">
                                 <div class="form-floating">
-                                    <InputSelect @bind-Value="_model.RoomTypeId" class="form-select" id="select3">
+                                    <InputSelect ValueExpression="() => _model.RoomTypeId"
+                                                 ValueChanged="(short id) => HandleRoomTypeChange(id)"
+                                                 class="form-select" id="select3">
                                         <option value="0">Выбор комнаты</option>
                                         @foreach (var roomType in _roomTypes)
                                         {
-                                            <option value="@roomType.Id">@roomType.Name</option>
+                                            <option value="@roomType.Id">@roomType.Name - @roomType.AdditionalData</option>
                                         }
                                     </InputSelect>
                                     <label for="select3">Выбор количества комнат</label>
@@ -153,6 +159,11 @@
                                     <label for="message">Дополнительные услуги</label>
                                 </div>
                                 <ValidationMessage For="() => _model.SpecialRequest" class="text-danger" />
+                            </div>
+                            <div class="col-12">
+                                <p>
+                                    <strong>Total Amount: @TotalAmount.ToString("c")</strong>
+                                </p>
                             </div>
                             <div class="col-12">
                                 <button class="btn btn-primary w-100 py-3" type="submit">Забронировать</button>
@@ -172,7 +183,12 @@
 
     private BookingModel _model = new();
 
-    private LookupModel<short>[] _roomTypes = [];
+    private decimal _price;
+
+    private int NoOfDays => (_model.CheckOutDate.DayNumber - _model.CheckInDate.DayNumber);
+    private decimal TotalAmount => NoOfDays * _price;
+
+    private LookupModel<short, decimal>[] _roomTypes = [];
 
     private bool _isAuthenticated;
     private string? _userId;
@@ -196,8 +212,15 @@
             && short.TryParse(SelectedRoomType, out short roomTypeId)
             && roomTypeId > 0)
         {
-            _model.RoomTypeId = roomTypeId;
+            HandleRoomTypeChange(roomTypeId);
         }
+    }
+
+    private void HandleRoomTypeChange(short newRoomTypeId)
+    {
+        _model.RoomTypeId = newRoomTypeId;
+        var roomType = _roomTypes.FirstOrDefault(rt => rt.Id == newRoomTypeId);
+        _price = roomType.AdditionalData;
     }
 
     private FilterModel? _filterModel = new();
@@ -223,17 +246,18 @@
     private async Task BookRoomAsync()
     {
         string? userId = _userId;
-        if(!_isAuthenticated)
+        if (!_isAuthenticated)
         {
             // Register this user as guest
             userId = await RegisterUserAsync();
-            if(userId is null)
+            if (userId is null)
             {
                 return;
             }
         }
         // Make Booking here
-        await MakeBooking(userId!);
+        var bookingId = await MakeBookingAsync(userId!);
+        if (bookingId is null) return;
 
         // Redirect user to Stripe Payment Page
         await PayNowAsync();
@@ -250,8 +274,7 @@
         user.RoleName = RoleType.Guest.ToString();
 
         var result = await UserService.CreateUserAsync(user, _model.Email, _model.Password);
-
-        if (!result.IsSuccess)
+        if (!result.IsSuccess && (result.Data is null || string.IsNullOrWhiteSpace(result.Data.Id)))
         {
             _errorMessage = result.ErrorMessage;
             return null;
@@ -259,13 +282,26 @@
         return result.Data.Id;
     }
 
-    private async Task MakeBooking(string userId)
+    private async Task<long?> MakeBookingAsync(string userId)
     {
-
+        _model.Amount = TotalAmount;
+        var result = await BookingService.MakeBookingAsync(_model, userId);
+        if (!result.IsSuccess)
+        {
+            _errorMessage = result.ErrorMessage;
+            return null;
+        }
+        return result.Data;
     }
 
     private async Task PayNowAsync()
     {
-        
+        var domain = NavigationManager.BaseUri.TrimEnd('/');
+        var roomTypeName = _roomTypes.First(rt => rt.Id == _model.RoomTypeId).Name;
+
+        var paymentModel = new PaymentModel(roomTypeName, NoOfDays, _price);
+        var paymentUrl = await PaymentService.GeneratePaymentUrl(paymentModel, _userId, domain);
+
+        NavigationManager.NavigateTo(paymentUrl);
     }
 }
