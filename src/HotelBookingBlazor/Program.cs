@@ -5,11 +5,13 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using HotelBookingBlazor.Services;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using HotelBookingBlazor.Endpoints;
 using HotelBookingBlazor.Services.Public;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
+
+StripeConfiguration.ApiKey = builder.Configuration.GetValue<string>("StripeApiKey");
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -43,7 +45,9 @@ builder.Services.AddTransient<SeedService>()
                 .AddTransient<IAmenitiesService, AmenitiesService>()
                 .AddTransient<IRoomTypeService, RoomTypeService>()
                 .AddTransient<IUserService, UserService>()
-                .AddTransient<IRoomsService, RoomsService>();
+                .AddTransient<IRoomsService, RoomsService>()
+                .AddTransient<IBookingService, BookingService>()
+                .AddTransient<IPaymentService, PaymentService>();
 
 var app = builder.Build();
 
