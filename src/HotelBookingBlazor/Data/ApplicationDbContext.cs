@@ -34,6 +34,11 @@ namespace HotelBookingBlazor.Data
             builder.Entity<Room>()
                 .HasIndex(r => r.RoomNumber)
                 .IsUnique();
+
+            builder.Entity<Booking>()
+                .HasOne(b => b.RoomType)
+                .WithMany()
+                .OnDelete(DeleteBehavior.NoAction);
         
         }
     }
