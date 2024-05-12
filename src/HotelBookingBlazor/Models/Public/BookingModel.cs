@@ -1,13 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace HotelBookingBlazor.Models.Public
 {
     public class BookingModel
     {
-        [Required, MaxLength(10), RegularExpression(@"[а-яА-Я]+$")]
+        //[Required, MaxLength(10), RegularExpression(@"[a-zA-Z]+$"), Unicode(false)]
+        [Required, MaxLength(10), RegularExpression(@"[a-zA-Z]+$")]
         public string FirstName { get; set; } = "";
 
-        [MaxLength(10), RegularExpression(@"[а-яА-Я]+$")]
+        //[Required, MaxLength(10), RegularExpression(@"[a-zA-Z]+$"), Unicode(false)]
+        [Required, MaxLength(10), RegularExpression(@"[a-zA-Z]+$")]
         public string? LastName { get; set; } = "";
 
         [Required]
@@ -45,11 +48,11 @@ namespace HotelBookingBlazor.Models.Public
         public void SetDummyValues()
         {
             // используем это только для обхода проверки DataAnnotation
-            Email = "blazing@blazing.com";
-            ContactNumber = "1234567890";
+            Email = "bous07@mail.ru";
+            ContactNumber = "+79246291675";
 
-            FirstName = "Blazing";
-            LastName = "Hotel";
+            FirstName = "Dmitriy";
+            LastName = "Gorbunov";
 
             Password = ConfirmPassword = "@Dmitriy123";
         }
