@@ -11,6 +11,7 @@ namespace HotelBookingBlazor.Data
         public DbSet<Amenity> Amenities { get; set; }
         public DbSet<RoomTypeAmenity> RoomTypeAmenities { get; set; }
         public DbSet<Booking> Bookings { get; set; }
+        public DbSet<Payment> Payments { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -37,6 +38,11 @@ namespace HotelBookingBlazor.Data
 
             builder.Entity<Booking>()
                 .HasOne(b => b.RoomType)
+                .WithMany()
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<Payment>()
+                .HasOne(p => p.Booking)
                 .WithMany()
                 .OnDelete(DeleteBehavior.NoAction);
         
