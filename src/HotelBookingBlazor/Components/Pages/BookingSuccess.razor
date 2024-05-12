@@ -1,8 +1,42 @@
-﻿@page "/booking-success"
+﻿@page "/bookings/{bookingId:long}/success"
 
-<h3>Booking Success</h3>
+@inject IPaymentService PaymentService
+
+@if (!string.IsNullOrWhiteSpace(_errorMessage))
+{
+    <h3 class="text-danger">@_errorMessage</h3>
+}
+else
+{
+    <h3>Уважаемый @_guestName, </h3>
+    <p>Ваш платеж подтвержден</p>
+    <p>Скоро вам выделят комнату</p>
+}
 
 @code {
+
+    [Parameter]
+    public long BookingId { get; set; }
+
     [SupplyParameterFromQuery(Name = "session-id")]
     public string CheckoutSessionId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "payment-id")]
+    public string PaymentId { get; set; }
+
+    private string? _guestName;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await PaymentService.ConfirmPaymentAsync(PaymentId, BookingId, CheckoutSessionId);
+        if (result.IsSuccess)
+        {
+            _guestName = result.Data;
+        }
+        else
+        {
+            _errorMessage = result.ErrorMessage ?? "Unable to confirm your payment";
+        }
+    }
 }

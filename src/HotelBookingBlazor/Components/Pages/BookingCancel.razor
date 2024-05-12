@@ -1,0 +1,10 @@
+﻿@page "/bookings/{bookingId:long}/cancel"
+
+@code {
+
+    [Parameter]
+    public long BookingId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "payment-id")]
+    public string PaymentId { get; set; }
+}
