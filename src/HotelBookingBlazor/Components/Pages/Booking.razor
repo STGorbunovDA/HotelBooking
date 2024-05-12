@@ -178,6 +178,7 @@
 
 
 @code {
+
     [SupplyParameterFromQuery(Name = "room-type")]
     public string? SelectedRoomType { get; set; }
 
@@ -260,7 +261,7 @@
         if (bookingId is null) return;
 
         // Redirect user to Stripe Payment Page
-        await PayNowAsync();
+        await PayNowAsync(bookingId.Value);
     }
 
     private async Task<string?> RegisterUserAsync()
@@ -294,12 +295,12 @@
         return result.Data;
     }
 
-    private async Task PayNowAsync()
+    private async Task PayNowAsync(long bookingId)
     {
         var domain = NavigationManager.BaseUri.TrimEnd('/');
         var roomTypeName = _roomTypes.First(rt => rt.Id == _model.RoomTypeId).Name;
 
-        var paymentModel = new PaymentModel(roomTypeName, NoOfDays, _price);
+        var paymentModel = new PaymentModel(bookingId, roomTypeName, NoOfDays, _price);
         var paymentUrl = await PaymentService.GeneratePaymentUrl(paymentModel, _userId, domain);
 
         NavigationManager.NavigateTo(paymentUrl);
