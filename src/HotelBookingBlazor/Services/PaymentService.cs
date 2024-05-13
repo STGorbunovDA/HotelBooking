@@ -12,6 +12,7 @@ namespace HotelBookingBlazor.Services
     {
         Task<string> GeneratePaymentUrl(PaymentModel model, string userId, string domain);
         Task<MethodResult<string?>> ConfirmPaymentAsync(string paymentIdStr, long bookingId, string checkoutSessionId);
+        Task<MethodResult> CancelPaymentAsync(string paymentIdStr, long bookingId, string checkoutSessionId);
     }
 
     public class PaymentService : IPaymentService
@@ -65,7 +66,7 @@ namespace HotelBookingBlazor.Services
                 LineItems = [lineItem],
                 Mode = "payment",
                 SuccessUrl = $"{domain}/bookings/{model.BookingId}" + "/success?session-id={CHECKOUT_SESSION_ID}&payment-id=" + paymentEntity.Id,
-                CancelUrl = $"{domain}/bookings/{model.BookingId}/cancel&payment-id={paymentEntity.Id}"
+                CancelUrl = $"{domain}/bookings/{model.BookingId}/cancel?session-id={{CHECKOUT_SESSION_ID}}&payment-id={paymentEntity.Id}"
             };
 
 
@@ -134,6 +135,54 @@ namespace HotelBookingBlazor.Services
                                               .Select(u => u.FullName)
                                               .FirstOrDefaultAsync();
             return new MethodResult<string?>(true, null, guestName);
+        }
+    
+        public async Task<MethodResult> CancelPaymentAsync(string paymentIdStr, long bookingId, string checkoutSessionId)
+        {
+            using var context = _contextFactory.CreateDbContext();
+            var paymentEntity = await context.Payments
+                                             .AsTracking()
+                                             .FirstOrDefaultAsync(p => p.Id == Guid.Parse(paymentIdStr)
+                                                            && p.CheckoutSessionId == checkoutSessionId);
+
+            if (paymentEntity is null)
+            {
+                return new MethodResult(false, "Invalid payment id");
+            }
+
+            var booking = await context.Bookings
+                                           .AsTracking()
+                                           .FirstOrDefaultAsync(b => b.Id == bookingId);
+
+            if (booking is null)
+            {
+                return new MethodResult(false, "Invalid booking id");
+            }
+
+
+            if(paymentEntity.Status == StripePaymentInitiated)
+            {
+                var sessionService = new SessionService();
+                var checkoutSession = await sessionService.GetAsync(checkoutSessionId);
+                if (checkoutSession is null)
+                {
+                    return new MethodResult(false, "Invalid checkout session");
+                }
+
+
+                paymentEntity.Status = "cancelled";
+                paymentEntity.AdditionalInfo = "Payment cancelled by Guest";
+
+
+                booking.Status = Constants.BookingStatus.PaymentCancelled;
+
+                await context.SaveChangesAsync();
+            }
+            var guestName = await _userManager.Users
+                                              .Where(u => u.Id == booking.GuestId)
+                                              .Select(u => u.FullName)
+                                              .FirstOrDefaultAsync();
+            return true;
         }
     }
 }
