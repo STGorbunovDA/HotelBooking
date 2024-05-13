@@ -1,17 +1,24 @@
 ﻿@page "/bookings/{bookingId:long}/success"
 
+@layout InnerPageLayout
+
 @inject IPaymentService PaymentService
 
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-    <h3 class="text-danger">@_errorMessage</h3>
-}
-else
-{
-    <h3>Уважаемый @_guestName, </h3>
-    <p>Ваш платеж подтвержден</p>
-    <p>Скоро вам выделят комнату</p>
-}
+<div class="container d-flex justify-content-center mt-5">
+    <div>
+        @if (!string.IsNullOrWhiteSpace(_errorMessage))
+        {
+            <h3 class="text-danger">@_errorMessage</h3>
+        }
+        else
+        {
+            <h3>Уважаемый @_guestName, </h3>
+            <p>Ваш платеж подтвержден</p>
+            <p>Скоро вам выделят комнату</p>
+        }
+    </div>
+</div>
+
 
 @code {
 
@@ -26,6 +33,8 @@ else
 
     private string? _guestName;
     private string? _errorMessage;
+
+    //https://localhost:7256/bookings/14/success?session-id=cs_test_a1CB50RUGzkpADUe2SIh0s0DLc4yWbWm09cfhvqHwRteQ7SmVJBiUDmdSP&payment-id=089f2cf7-703a-4b2e-2ba9-08dc736edbb3
 
     protected override async Task OnInitializedAsync()
     {
