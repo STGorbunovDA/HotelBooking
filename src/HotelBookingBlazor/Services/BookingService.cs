@@ -9,6 +9,7 @@ namespace HotelBookingBlazor.Services
     public interface IBookingService
     {
         Task<MethodResult<long>> MakeBookingAsync(BookingModel bookingModel, string userId);
+        Task<PagedResult<BookingDisplayModel>> GetBookingAsync(int startIndex, int pageSize);
     }
 
     public class BookingService : IBookingService
@@ -48,6 +49,40 @@ namespace HotelBookingBlazor.Services
                 return ex.Message;
             }
 
+        }
+   
+        public async Task<PagedResult<BookingDisplayModel>> GetBookingAsync(int startIndex, int pageSize)
+        {
+            using var context = _contextFactory.CreateDbContext();
+            var query = context.Bookings;
+
+            var totalCount = await query.CountAsync();
+
+            var bookings = await query.OrderByDescending(b => b.CheckInDate)
+                                      .Select(b => new BookingDisplayModel
+                                      {
+                                          Adults = b.Adults,
+                                          BookedOn = b.BookedOn,
+                                          CheckInDate = b.CheckInDate,
+                                          CheckOutDate = b.CheckOutDate,
+                                          Children = b.Children,
+                                          GuestId = b.GuestId,
+                                          GuestName = b.Guest.FullName,
+                                          RoomTypeId = b.RoomTypeId,
+                                          RoomTypeName = b.RoomType.Name,
+                                          Id = b.Id,
+                                          RoomId = b.RoomId,
+                                          RoomNumber = b.RoomId == null ? "" : b.Room.RoomNumber,
+                                          SpecialRequest = b.SpecialRequest,
+                                          Status = b.Status,
+                                          TotalAmount = b.TotalAmount,
+                                          Remarks = b.Remarks
+                                      })
+                                      .Skip(startIndex)
+                                      .Take(pageSize)
+                                      .ToArrayAsync();
+
+            return new PagedResult<BookingDisplayModel>(totalCount, bookings);
         }
     }
 }
