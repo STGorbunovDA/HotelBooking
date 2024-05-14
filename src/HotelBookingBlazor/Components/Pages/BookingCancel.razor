@@ -1,5 +1,22 @@
 ﻿@page "/bookings/{bookingId:long}/cancel"
 
+@layout InnerPageLayout
+
+@inject IPaymentService PaymentService
+
+<div class="container d-flex justify-content-center mt-5">
+    <div>
+        @if(_errorMessage == null)
+        {
+            <p>Your payment is cancelled</p>
+        }
+        else
+        {
+            <p class="text-danger">@_errorMessage</p>
+        }
+    </div>
+</div>
+
 @code {
 
     [Parameter]
@@ -7,4 +24,18 @@
 
     [SupplyParameterFromQuery(Name = "payment-id")]
     public string PaymentId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "session-id")]
+    public string CheckoutSessionId { get; set; }
+
+    private string? _errorMessage = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await PaymentService.CancelPaymentAsync(PaymentId, BookingId, CheckoutSessionId);
+        if(!result.IsSucces)
+        {
+            _errorMessage = result.ErrorMessage;
+        }
+    }
 }
