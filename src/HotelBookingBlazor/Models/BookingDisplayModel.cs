@@ -23,5 +23,12 @@ namespace HotelBookingBlazor.Models
         public string? Remarks { get; set; }
 
         public BookingStatus Status { get; set; }
+
+        public bool IsRoomNumberAssignable => Status == BookingStatus.PaymentSuccess
+                                           || Status == BookingStatus.Booked;
+        public bool CanBeApproved => Status == BookingStatus.PaymentSuccess;
+
+        public bool CanBeCancelled => Status == BookingStatus.PaymentCancelled
+                                   && Status != BookingStatus.Cancelled;
     }
 }
