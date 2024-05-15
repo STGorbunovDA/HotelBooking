@@ -13,6 +13,7 @@ namespace HotelBookingBlazor.Services
         Task<Room[]> GetRoomsAsync(short roomTypeId);
         Task<MethodResult<Room>> SaveRoomAsync(Room room);
         Task<MethodResult> DeleteRoomAsync(int roomId);
+        Task<MethodResult> AssignRoomToBookingAsync(long bookingId, int  roomId);
     }
 
     public class RoomTypeService : IRoomTypeService
@@ -188,6 +189,38 @@ namespace HotelBookingBlazor.Services
             }
 
             dbRoom.IsDeleted = true;
+            await context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<MethodResult> AssignRoomToBookingAsync(long bookingId, int roomId)
+        {
+            using var context = _contextFactory.CreateDbContext();
+            var room = await context.Rooms.FirstOrDefaultAsync(r => r.Id == roomId && !r.IsDeleted);
+            if (room is null)
+                return "Invalid request";
+            
+            if(!room.IsAvailable)
+                return "This room is not available";
+            
+
+            var booking = await context.Bookings
+                                       .AsTracking()
+                                       .FirstOrDefaultAsync(b => b.Id == bookingId);
+            if (booking is null)
+                return "Invalid request";
+
+            if (booking.RoomId.HasValue)
+            {
+                var existingRoom = await context.Rooms
+                                                .AsTracking()
+                                                .FirstOrDefaultAsync(b => b.Id == booking.RoomId.Value);
+                if(existingRoom is not null)
+                {
+                    existingRoom.IsAvailable = true;
+                }
+            }
+            booking.RoomId = roomId;
             await context.SaveChangesAsync();
             return true;
         }
