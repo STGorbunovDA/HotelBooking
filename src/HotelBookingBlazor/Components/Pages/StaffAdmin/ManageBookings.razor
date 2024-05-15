@@ -1,13 +1,11 @@
 ﻿@page "/staff-admin/manage-bookings"
 @using Microsoft.AspNetCore.Components.QuickGrid
 
-@using Booking = HotelBookingBlazor.Data.Entities.Booking;
-
 @rendermode @(new InteractiveServerRenderMode(prerender:false))
 
 @inject IBookingService BookingService
 
-<div class="container">
+<div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center">
         <h1>
             Manage Bookings
@@ -17,17 +15,39 @@
     <div class="table-responsive">
         <QuickGrid ItemsProvider="_bookingProvider" Pagination="_paginationState" class="table table-striped">
             <PropertyColumn Property="b => b.Id" />
-            <PropertyColumn Property="b => b.RoomType.Name" />
-            <PropertyColumn Property="b => b.Room.RoomNumber" />
-            <PropertyColumn Property="b => b.Guest.FullName" />
-            <PropertyColumn Property="b => b.BookedOn" />
-            <PropertyColumn Property="b => b.CheckInDate" />
-            <PropertyColumn Property="b => b.CheckOutDate" />
+            <PropertyColumn Property="b => b.RoomTypeName" Title="Тип номера" />
+            <TemplateColumn Title="Номер комнаты">
+                @if (context.RoomId is null)
+                {
+                    <small>Номера нет</small>
+
+                    @if (context.IsRoomNumberAssignable)
+                    {
+                        <button type="button" class="btn btn-sm btn-primary">Назначить комнату</button>
+                    }
+                    else
+                    {
+                        <small>Номер комнаты может быть присвоен только после оплаты</small>
+                    }
+                }
+                else
+                {
+                    <button type="button" class="btn btn-sm btn-primary">@context.RoomNumber</button>
+                }
+            </TemplateColumn>
+            <PropertyColumn Property="b => b.GuestName" Title="Гость" />
+            <PropertyColumn Property="b => b.BookedOn" Title="Дата Брони" />
+            <PropertyColumn Property="b => b.CheckInDate" Title="Дата заезда" />
+            <PropertyColumn Property="b => b.CheckOutDate" Title="Дата выезда" />
             <PropertyColumn Property="b => b.Adults" />
             <PropertyColumn Property="b => b.Children" />
-            <PropertyColumn Property="b => b.SpecialRequest" />
+            <PropertyColumn Property="b => b.SpecialRequest" Title="Дополнительно" />
             <PropertyColumn Property="b => b.Status" />
             <PropertyColumn Property="b => b.Remarks" />
+            <TemplateColumn>
+                <button type="submit" class="btn btn-sm btn-success" disabled="@(!context.CanBeApproved)">Одобрить</button>
+                <button type="submit" class="btn btn-sm btn-danger" disabled="@(!context.CanBeCancelled)">Отменить</button>
+            </TemplateColumn>
 
         </QuickGrid>
     </div>
@@ -41,7 +61,7 @@
 
 @code {
     private bool _isLoading;
-    private GridItemsProvider<Booking>? _bookingProvider;
+    private GridItemsProvider<BookingDisplayModel>? _bookingProvider;
 
     private const int PageSize = 10;
 
@@ -49,7 +69,7 @@
 
     protected override void OnInitialized()
     {
-        _bookingProvider = async (GridItemsProviderRequest<Booking> request) =>
+        _bookingProvider = async (GridItemsProviderRequest<BookingDisplayModel> request) =>
         {
             _isLoading = true;
             StateHasChanged();
@@ -58,7 +78,7 @@
 
             _isLoading = false;
             StateHasChanged();
-            return GridItemsProviderResult.From<Booking>(result.Records, result.TotalCount);
+            return GridItemsProviderResult.From<BookingDisplayModel>(result.Records, result.TotalCount);
         };
     }
 }
