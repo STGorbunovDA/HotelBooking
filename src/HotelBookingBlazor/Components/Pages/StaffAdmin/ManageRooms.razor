@@ -17,7 +17,7 @@
             Управление номером <small>[@Name]</small>
         </h1>
         <button type="button" class="btn btn-sm btn-primary"
-                @onclick="OpenCreateRoomModal">
+                @onclick="() => _showCreateRoomDialog = true">
             Добавить новый номер
         </button>
     </div>
@@ -71,12 +71,8 @@
 
 </div>
 
-<dialog id="@DialogId" style="min-width:300px">
-    <div class="d-flex justify-content-between align-items-center">
-        <h4 class="m-0">Создание номера</h4>
-        <button class="btn btn-danger btn-sm" @onclick="CloseRoomModal">X</button>
-    </div>
-    <hr />
+
+<DialogComponent Title="Создание номера" DialogId="@DialogId" Show="_showCreateRoomDialog" OnCloseModal="() => _showCreateRoomDialog = false">
     <EditForm Model="_createRoomModel" OnValidSubmit="CreateRoomAsync">
         <DataAnnotationsValidator />
         <div class="mb-3">
@@ -94,13 +90,8 @@
             <button type="submit" class="btn btn-sm btn-primary">Создать номер</button>
         </div>
     </EditForm>
-</dialog>
+</DialogComponent>
 
-<style>
-    ::backdrop {
-        background-color: rgba(224,145,20,0.5);
-    }
-</style>
 
 @code {
 
@@ -114,6 +105,8 @@
     public string Name { get; set; } = "";
 
     private const string DialogId = "create-room-dialog";
+
+    private bool _showCreateRoomDialog;
 
     protected override async Task OnInitializedAsync()
     {
@@ -136,15 +129,11 @@
         {
             _rooms = [.. _rooms, result.Data];
             _createRoomModel = new();
-            await CloseRoomModal();
+            _showCreateRoomDialog = false;
             return;
         }
         await JsRuntime.InvokeVoidAsync("window.alertModal", result.ErrorMessage ?? "Ошибка создания номера");
     }
-
-    private async Task CloseRoomModal() => await JsRuntime.InvokeVoidAsync("window.closeModal", DialogId);
-
-    private async Task OpenCreateRoomModal() => await JsRuntime.InvokeVoidAsync("window.showModal", DialogId);
 
     private async Task HandleIsAvaliableChange(Room room)
     {
