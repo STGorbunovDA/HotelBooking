@@ -1,9 +1,11 @@
 ﻿@page "/staff-admin/manage-bookings"
+@using HotelBookingBlazor.Data.Entities
 @using Microsoft.AspNetCore.Components.QuickGrid
 
 @rendermode @(new InteractiveServerRenderMode(prerender:false))
 
 @inject IBookingService BookingService
+@inject IRoomTypeService RoomTypeService
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center">
@@ -67,6 +69,8 @@
 
     private PaginationState _paginationState = new PaginationState { ItemsPerPage = PageSize };
 
+    private IDictionary<short, Room[]> _roomTypeRooms = new Dictionary<short, Room[]>();
+
     protected override void OnInitialized()
     {
         _bookingProvider = async (GridItemsProviderRequest<BookingDisplayModel> request) =>
@@ -80,5 +84,21 @@
             StateHasChanged();
             return GridItemsProviderResult.From<BookingDisplayModel>(result.Records, result.TotalCount);
         };
+    }
+
+    private Room[] _rooms = [];
+
+    private async Task AssignRoomAsync(short roomTypeId, long bookingId)
+    {
+        if (!_roomTypeRooms.TryGetValue(roomTypeId, out var rooms))
+        {
+            rooms = (await RoomTypeService.GetRoomsAsync(roomTypeId)) ?? [];
+            _roomTypeRooms[roomTypeId] = rooms;
+        }
+        if(rooms.Length == 0)
+        {
+
+        }
+        _rooms = rooms;
     }
 }
