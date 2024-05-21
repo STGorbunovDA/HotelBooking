@@ -196,7 +196,9 @@ namespace HotelBookingBlazor.Services
         public async Task<MethodResult> AssignRoomToBookingAsync(long bookingId, int roomId)
         {
             using var context = _contextFactory.CreateDbContext();
-            var room = await context.Rooms.FirstOrDefaultAsync(r => r.Id == roomId && !r.IsDeleted);
+            var room = await context.Rooms
+                                    .AsTracking()
+                                    .FirstOrDefaultAsync(r => r.Id == roomId && !r.IsDeleted);
             if (room is null)
                 return "Invalid request";
             
@@ -220,6 +222,7 @@ namespace HotelBookingBlazor.Services
                     existingRoom.IsAvailable = true;
                 }
             }
+            room.IsAvailable = false;
             booking.RoomId = roomId;
             await context.SaveChangesAsync();
             return true;
