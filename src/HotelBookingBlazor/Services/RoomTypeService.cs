@@ -13,7 +13,7 @@ namespace HotelBookingBlazor.Services
         Task<Room[]> GetRoomsAsync(short roomTypeId);
         Task<MethodResult<Room>> SaveRoomAsync(Room room);
         Task<MethodResult> DeleteRoomAsync(int roomId);
-        Task<MethodResult> AssignRoomToBookingAsync(long bookingId, int  roomId);
+        Task<MethodResult> AssignRoomToBookingAsync(long bookingId, int roomId);
     }
 
     public class RoomTypeService : IRoomTypeService
@@ -151,11 +151,11 @@ namespace HotelBookingBlazor.Services
 
                 if (room.Id == 0)
                 {
-                    if(await context.Rooms.AnyAsync(r => r.RoomNumber == room.RoomNumber))
+                    if (await context.Rooms.AnyAsync(r => r.RoomNumber == room.RoomNumber))
                     {
                         return "Номер комнаты уже существует";
                     }
-                   await context.Rooms.AddAsync(room);
+                    await context.Rooms.AddAsync(room);
                 }
                 else
                 {
@@ -201,10 +201,10 @@ namespace HotelBookingBlazor.Services
                                     .FirstOrDefaultAsync(r => r.Id == roomId && !r.IsDeleted);
             if (room is null)
                 return "Invalid request";
-            
-            if(!room.IsAvailable)
+
+            if (!room.IsAvailable)
                 return "This room is not available";
-            
+
 
             var booking = await context.Bookings
                                        .AsTracking()
@@ -217,7 +217,7 @@ namespace HotelBookingBlazor.Services
                 var existingRoom = await context.Rooms
                                                 .AsTracking()
                                                 .FirstOrDefaultAsync(b => b.Id == booking.RoomId.Value);
-                if(existingRoom is not null)
+                if (existingRoom is not null)
                 {
                     existingRoom.IsAvailable = true;
                 }
