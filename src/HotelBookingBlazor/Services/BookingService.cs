@@ -10,6 +10,8 @@ namespace HotelBookingBlazor.Services
     {
         Task<MethodResult<long>> MakeBookingAsync(BookingModel bookingModel, string userId);
         Task<PagedResult<BookingDisplayModel>> GetBookingAsync(int startIndex, int pageSize);
+        Task<MethodResult> ApproveBookingAsync(long bookingId);
+        Task<MethodResult> CancelBookingAsync(long bookingId, string cancelReason);
     }
 
     public class BookingService : IBookingService
@@ -83,6 +85,53 @@ namespace HotelBookingBlazor.Services
                                       .ToArrayAsync();
 
             return new PagedResult<BookingDisplayModel>(totalCount, bookings);
+        }
+
+        public async Task<MethodResult> ApproveBookingAsync(long bookingId)
+        {
+            using var context = _contextFactory.CreateDbContext();
+            var booking = await context.Bookings
+                                       .AsTracking()
+                                       .FirstOrDefaultAsync(b => b.Id == bookingId);
+
+            if (booking is null)
+                return "Недопустимый запрос";
+
+            switch (booking.Status)
+            {
+                case Constants.BookingStatus.Booked:
+                    return "Уже одобрено";
+                case Constants.BookingStatus.Cancelled:
+                    return "Бронирование отменено";
+                case Constants.BookingStatus.PaymentSuccess:
+                    booking.Status = Constants.BookingStatus.Booked;
+                    break;
+                default:
+                    return "Бронирование может быть подтверждено только после оплаты";
+
+            }
+            await context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<MethodResult> CancelBookingAsync(long bookingId, string cancelReason)
+        {
+            using var context = _contextFactory.CreateDbContext();
+            var booking = await context.Bookings
+                                       .AsTracking()
+                                       .FirstOrDefaultAsync(b => b.Id == bookingId);
+
+            if (booking is null)
+                return "Недопустимый запрос";
+
+            if (booking.Status == Constants.BookingStatus.Cancelled)
+                return "Уже отменен";
+
+            booking.Status = Constants.BookingStatus.Cancelled;
+            booking.Remarks += Environment.NewLine + $"Отменено персоналом/администратором. Причина: {cancelReason}";
+
+            await context.SaveChangesAsync();
+            return true;
         }
     }
 }
