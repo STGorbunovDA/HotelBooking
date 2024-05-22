@@ -6,7 +6,7 @@
 
 @inject IBookingService BookingService
 @inject IRoomTypeService RoomTypeService
-@inject IJSRuntime JsRuntine
+@inject IJSRuntime JsRuntime
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center">
@@ -48,8 +48,8 @@
             <PropertyColumn Property="b => b.Status" />
             <PropertyColumn Property="b => b.Remarks" />
             <TemplateColumn>
-                <button type="submit" class="btn btn-sm btn-success" disabled="@(!context.CanBeApproved)">Одобрить</button>
-                <button type="submit" class="btn btn-sm btn-danger" disabled="@(!context.CanBeCancelled)">Отменить</button>
+                <button type="submit" class="btn btn-sm btn-success" disabled="@(!context.CanBeApproved)" @onclick="() => ApproveBookingAsync(context)">Одобрить</button>
+                <button type="submit" class="btn btn-sm btn-danger" disabled="@(!context.CanBeCancelled)" @onclick="() => CancelBookingAsync(context)">Отменить</button>
             </TemplateColumn>
 
         </QuickGrid>
@@ -67,14 +67,19 @@
                  Title="Assign/Change Room to Booking"
                  OnCloseModal="HandleAssignRoomModalClose">
     <div>
-        <select @bind="_selectedRoomId" class="form-control">
-            <option value="0">Select Room</option>
-            @foreach (var room in _rooms)
-            {
-                <option value="@room.Id">@room.RoomNumber</option>
-            }
-        </select>
-        <button type="button" class="btn btn-primary btn-sm" @onclick="AssignRoomAsync">Save</button>
+        <div class="mb-3">
+            <label class="form-label">№ Номера: </label>
+            <select @bind="_selectedRoomId" class="form-control form-control-sm">
+                <option value="0">Select Room</option>
+                @foreach (var room in _rooms)
+                {
+                    <option value="@room.Id">@room.RoomNumber</option>
+                }
+            </select>
+        </div>
+        <div class="mb-3">
+            <button type="button" class="btn btn-primary btn-sm" @onclick="AssignRoomAsync">Save</button>
+        </div>
     </div>
 
 </DialogComponent>
@@ -119,12 +124,15 @@
         {
             await AlertAsync("В отеле нет номеров такого типа");
         }
-        _rooms = rooms.Where(r=> r.IsAvailable).ToArray();
+        _rooms = rooms.Where(r => r.IsAvailable).ToArray();
         _booking = booking;
     }
 
     private async Task AlertAsync(string message) =>
-    await JsRuntine.InvokeVoidAsync("window.alertModal", message);
+    await JsRuntime.InvokeVoidAsync("window.alertModal", message);
+
+    private async Task<bool> ConfirmAsync(string message) =>
+        await JsRuntime.InvokeAsync<bool>("window.alertModal", message);
 
     private void HandleAssignRoomModalClose()
     {
@@ -135,16 +143,65 @@
 
     private async Task AssignRoomAsync()
     {
-        if(_booking is not null && _selectedRoomId > 0)
+        if (_booking is not null && _selectedRoomId > 0)
         {
             var result = await RoomTypeService.AssignRoomToBookingAsync(_booking.Id, _selectedRoomId);
-            if(!result.IsSucces)
+            if (!result.IsSucces)
             {
                 await AlertAsync($"Error in assigning/changin room. {result.ErrorMessage}");
                 return;
             }
             HandleAssignRoomModalClose();
             await _bookingsGrid.RefreshDataAsync();
+        }
+    }
+
+    private async Task ApproveBookingAsync(BookingDisplayModel booking)
+    {
+        if(booking.CanBeApproved)
+        {
+            if (await ConfirmAsync("Вы уверены, что хотите одобрить это бронирование?"))
+            {
+                var result = await BookingService.ApproveBookingAsync(booking.Id);
+                if(!result.IsSucces)
+                {
+                    await AlertAsync(result.ErrorMessage ?? "Ошибка при подтверждении бронирования");
+                    return;
+                }
+                else
+                {
+                    await _bookingsGrid.RefreshDataAsync();
+                }
+            }
+        }
+    }
+
+    private async Task CancelBookingAsync(BookingDisplayModel booking)
+    {
+        if(booking.CanBeCancelled)
+        {
+            if (await ConfirmAsync("Вы уверены, что хотите отменить это бронирование?"))
+            {
+                var reason = await JsRuntime.InvokeAsync<string?>("window.prompt", "Cancellation Reason: ");
+
+                if(string.IsNullOrWhiteSpace(reason))
+                {
+                    await AlertAsync("Требуется указать причину отмены бронирования");
+                    return;
+                }
+                var result = await BookingService.CancelBookingAsync(booking.Id, reason);
+
+                if (!result.IsSucces)
+                {
+                    await AlertAsync(result.ErrorMessage ?? "Ошибка при отмене бронирования");
+                    return;
+                }
+                else
+                {
+                    await _bookingsGrid.RefreshDataAsync();
+                }
+            }
+            var x = 0;
         }
     }
 }
