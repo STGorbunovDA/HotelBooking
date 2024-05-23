@@ -44,10 +44,11 @@
             <PropertyColumn Property="b => b.CheckOutDate" Title="Дата выезда" />
             <PropertyColumn Property="b => b.Adults" />
             <PropertyColumn Property="b => b.Children" />
+            <PropertyColumn Property="b => b.TotalAmount" Title="Цена"/>
             <PropertyColumn Property="b => b.SpecialRequest" Title="Дополнительно" />
             <PropertyColumn Property="b => b.Status" />
             <PropertyColumn Property="b => b.Remarks" />
-            <TemplateColumn>
+            <TemplateColumn Class="grid-action-column">
                 <button type="submit" class="btn btn-sm btn-success" disabled="@(!context.CanBeApproved)" @onclick="() => ApproveBookingAsync(context)">Одобрить</button>
                 <button type="submit" class="btn btn-sm btn-danger" disabled="@(!context.CanBeCancelled)" @onclick="() => CancelBookingAsync(context)">Отменить</button>
             </TemplateColumn>
@@ -83,6 +84,12 @@
     </div>
 
 </DialogComponent>
+
+<style type="text/css" scoped>
+    .grid-action-column {
+        min-width: 190px;
+    }
+</style>
 
 @code {
     private bool _isLoading;
@@ -129,10 +136,10 @@
     }
 
     private async Task AlertAsync(string message) =>
-    await JsRuntime.InvokeVoidAsync("window.alertModal", message);
+        await JsRuntime.InvokeVoidAsync("window.alertModal", message);
 
     private async Task<bool> ConfirmAsync(string message) =>
-        await JsRuntime.InvokeAsync<bool>("window.alertModal", message);
+    await JsRuntime.InvokeAsync<bool>("window.confirm", message);
 
     private void HandleAssignRoomModalClose()
     {
@@ -201,7 +208,6 @@
                     await _bookingsGrid.RefreshDataAsync();
                 }
             }
-            var x = 0;
         }
     }
 }
