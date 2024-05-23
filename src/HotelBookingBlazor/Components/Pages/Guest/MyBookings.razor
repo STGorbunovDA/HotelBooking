@@ -1,0 +1,45 @@
+﻿@page "/guest/my-bookings"
+
+@rendermode @(new InteractiveServerRenderMode(prerender:false))
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1>
+            My Bookings
+        </h1>
+    </div>
+    <hr />
+    <div class="row">
+        <div class="col-sm-8">
+
+        </div>
+        <div class="col-sm-4">
+            <div class="d-flex justify-content-end">
+                <input type="radio" class="btn-check" name="booking-type" id="upcoming" 
+                checked="@(_selectBookingType == BookingDisplayType.Upcoming)"
+                       @onchange="() => ChangeBookingType(BookingDisplayType.Upcoming)" />
+                <label class="btn btn-outline-primary" for="upcoming">Предстоящее бронирование </label>
+
+                <input type="radio" class="btn-check" name="booking-type" id="ongoing" 
+                checked="@(_selectBookingType == BookingDisplayType.Ongoing)"
+                       @onchange="() => ChangeBookingType(BookingDisplayType.Ongoing)" />
+                <label class="btn btn-outline-primary" for="ongoing">Текущее бронирование</label>
+
+                <input type="radio" class="btn-check" name="booking-type" id="past" 
+                checked="@(_selectBookingType == BookingDisplayType.Past)"
+                       @onchange="() => ChangeBookingType(BookingDisplayType.Past)" />
+                <label class="btn btn-outline-primary" for="past">Предыдущее бронирование</label>
+
+            </div>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <p>Currently Selected: @_selectBookingType</p>
+    </div>
+</div>
+
+@code {
+    private BookingDisplayType _selectBookingType = BookingDisplayType.Upcoming;
+
+    private void ChangeBookingType(BookingDisplayType type) => _selectBookingType = type;
+}
