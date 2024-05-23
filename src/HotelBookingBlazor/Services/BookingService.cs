@@ -12,6 +12,7 @@ namespace HotelBookingBlazor.Services
         Task<PagedResult<BookingDisplayModel>> GetBookingAsync(int startIndex, int pageSize);
         Task<MethodResult> ApproveBookingAsync(long bookingId);
         Task<MethodResult> CancelBookingAsync(long bookingId, string cancelReason);
+        Task<PagedResult<BookingDisplayModel>> GetBookingsForGuestAsync(string guestId, BookingDisplayModel type, int startIndex, int pageSize);
     }
 
     public class BookingService : IBookingService
@@ -132,6 +133,40 @@ namespace HotelBookingBlazor.Services
 
             await context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<PagedResult<BookingDisplayModel>> GetBookingsForGuestAsync(string guestId, BookingDisplayModel type, int startIndex, int pageSize)
+        {
+            using var context = _contextFactory.CreateDbContext();
+            var query = context.Bookings;
+
+            var totalCount = await query.CountAsync();
+
+            var bookings = await query.OrderByDescending(b => b.CheckInDate)
+                                      .Select(b => new BookingDisplayModel
+                                      {
+                                          Adults = b.Adults,
+                                          BookedOn = b.BookedOn,
+                                          CheckInDate = b.CheckInDate,
+                                          CheckOutDate = b.CheckOutDate,
+                                          Children = b.Children,
+                                          GuestId = b.GuestId,
+                                          GuestName = b.Guest.FullName,
+                                          RoomTypeId = b.RoomTypeId,
+                                          RoomTypeName = b.RoomType.Name,
+                                          Id = b.Id,
+                                          RoomId = b.RoomId,
+                                          RoomNumber = b.RoomId == null ? "" : b.Room.RoomNumber,
+                                          SpecialRequest = b.SpecialRequest,
+                                          Status = b.Status,
+                                          TotalAmount = b.TotalAmount,
+                                          Remarks = b.Remarks
+                                      })
+                                      .Skip(startIndex)
+                                      .Take(pageSize)
+                                      .ToArrayAsync();
+
+            return new PagedResult<BookingDisplayModel>(totalCount, bookings);
         }
     }
 }
