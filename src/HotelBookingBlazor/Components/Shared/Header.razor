@@ -57,7 +57,7 @@
                                         <NavLink href="/my-profile" class="dropdown-item">Мой профиль</NavLink>
 
                                         <AuthorizeView Roles="@RoleType.Guest.ToString()" Context="guestContext">
-                                            <NavLink href="booking" class="dropdown-item">Мои бронирования</NavLink>
+                                            <NavLink href="guest/my-bookings" class="dropdown-item">Мои бронирования</NavLink>
                                         </AuthorizeView>
 
                                         <AuthorizeView Roles="Admin" Context="adminContext">
