@@ -12,6 +12,7 @@ namespace HotelBookingBlazor.Services
         Task<PagedResult<UserDisplayModel>> GetUserAsync(int startIndex, int pageSize, RoleType? roleType = null);
         Task<MyProfileModel?> GetProfileDetailsAsync(string userId);
         Task<MethodResult> UpdateProfileAsync(MyProfileModel model, RoleType? roleType = null);
+        Task<MethodResult> ChangePasswordAsync(ChangePasswordModel model, string userId);
     }
 
     public class UserService : IUserService
@@ -50,9 +51,9 @@ namespace HotelBookingBlazor.Services
         public async Task<MethodResult<ApplicationUser>> CreateUserAsync(ApplicationUser user,
             string email, string password)
         {
-            var existingUser = await _userManager.FindByIdAsync(user.Id);   
+            var existingUser = await _userManager.FindByIdAsync(user.Id);
 
-            if(existingUser is not null)
+            if (existingUser is not null)
             {
                 return new MethodResult<ApplicationUser>(false, "Email exists already", existingUser);
             }
@@ -92,12 +93,12 @@ namespace HotelBookingBlazor.Services
         {
             var query = _userManager.Users
                         .Where(u => u.Id == userId);
-            if(roleType is not null)
+            if (roleType is not null)
             {
                 query = query.Where(u => u.RoleName == RoleType.Staff.ToString());
             }
             return query;
-        }              
+        }
 
         public async Task<MethodResult> UpdateProfileAsync(MyProfileModel model, RoleType? roleType = null)
         {
@@ -149,6 +150,22 @@ namespace HotelBookingBlazor.Services
                 throw new NotSupportedException("Пользовательский интерфейс по умолчанию требует наличия пользовательского хранилища с поддержкой электронной почты.");
             }
             return (IUserEmailStore<ApplicationUser>)_userStore;
+        }
+
+        public async Task<MethodResult> ChangePasswordAsync(ChangePasswordModel model, string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user is null)
+                return "Invalid request";
+
+            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+
+            if (!result.Succeeded)
+            {
+                return $"Error: {string.Join(", ", result.Errors.Select(error => error.Description))}";
+            }
+            return true;
         }
     }
 }
