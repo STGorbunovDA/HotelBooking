@@ -6,8 +6,82 @@
     Контакты
 </Microsoft.AspNetCore.Components.Sections.SectionContent>
 
-<ContactSection />
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+            <h6 class="section-title text-center text-primary text-uppercase">Связь с нами</h6>
+            <h1 class="mb-5"><span class="text-primary text-uppercase">Контакты</span> Для любого вопроса</h1>
+        </div>
+        <div class="row g-4">
+            <div class="col-12">
+                <div class="row gy-4">
+                    <div class="col-md-4">
+                        <h6 class="section-title text-start text-primary text-uppercase">Бронирование</h6>
+                        <p><i class="fa fa-envelope-open text-primary me-2"></i>bous07@mail.ru</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="section-title text-start text-primary text-uppercase">Общие</h6>
+                        <p><i class="fa fa-envelope-open text-primary me-2"></i>bous07@mail.ru</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="section-title text-start text-primary text-uppercase">Технические</h6>
+                        <p><i class="fa fa-envelope-open text-primary me-2"></i>bous07@mail.ru</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 wow fadeIn" data-wow-delay="0.1s">
+                <iframe class="position-relative rounded w-100 h-100"
+                        src="https://yandex.ru/map-widget/v1/?ll=43.184394%2C56.242679&z=14"
+                        frameborder="0" style="min-height: 350px; border:0;" allowfullscreen="" aria-hidden="false"
+                        tabindex="0"></iframe>
+            </div>
+            <div class="col-md-6">
+                <div class="wow fadeInUp" data-wow-delay="0.2s">
+                    <EditForm Model="Model" Enhance FormName="enquiry-form">
+                         <div class="row g-3">
+                             <div class="col-md-6">
+                                 <div class="form-floating">
+                                     <InputText @bind-Value="Model.Name" class="form-control" id="name" placeholder="Введите имя"></InputText>
+                                     <label for="name">Ваше Имя</label>
+                                 </div>
+                             </div>
+                             <div class="col-md-6">
+                                 <div class="form-floating">
+                                     <input type="email" class="form-control" id="email" placeholder="Введи почту">
+                                     <label for="email">Ваша почта</label>
+                                 </div>
+                             </div>
+                             <div class="col-12">
+                                 <div class="form-floating">
+                                     <input type="text" class="form-control" id="subject" placeholder="Заголовок(обращение)">
+                                     <label for="subject">Заголовок</label>
+                                 </div>
+                             </div>
+                             <div class="col-12">
+                                 <div class="form-floating">
+                                     <textarea class="form-control" placeholder="Введите ваше сообщение" id="message" style="height: 150px"></textarea>
+                                     <label for="message">Сообщение</label>
+                                 </div>
+                             </div>
+                             <div class="col-12">
+                                 <button class="btn btn-primary w-100 py-3" type="submit">Отправить</button>
+                             </div>
+                         </div>
+                     </EditForm>
+                 </div>
+             </div>
+         </div>
+     </div>
+ </div>
 
-@code {
+ @code {
+    [SupplyParameterFromForm]
+    public EnquiryModel Model { get; set; } = new();
 
+    private string? _error;
+    private string? _message;
+    private bool _isProcessing;
+
+    [CascadingParameter]
+    public HttpContext HttpContext { get; set; }
 }
