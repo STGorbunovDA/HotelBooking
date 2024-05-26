@@ -44,19 +44,17 @@ namespace HotelBookingBlazor.Services
             await context.Payments.AddAsync(paymentEntity);
             await context.SaveChangesAsync();
 
-            var totalAmount = model.NoOfDays * model.Price * 100;
-
             var lineItem = new SessionLineItemOptions
             {
                 Quantity = 1,
                 PriceData = new SessionLineItemPriceDataOptions
                 {
                     Currency = "rub",
-                    UnitAmountDecimal = totalAmount,
+                    UnitAmountDecimal = model.TotalAmount * 100,
                     ProductData = new SessionLineItemPriceDataProductDataOptions
                     {
                         Name = model.RoomTypeName,
-                        Description = $"Бронирование номера: {model.RoomTypeName}, на {model.NoOfDays} {(model.NoOfDays > 1 ? "дней" : "день")}, за стоимость: {model.Price:c}/ночь"
+                        Description = $"Бронирование номера: {model.RoomTypeName}, на {model.NoOfDays} {(model.NoOfDays > 1 ? "дней" : "день")}"
                     }
                 }
             };
