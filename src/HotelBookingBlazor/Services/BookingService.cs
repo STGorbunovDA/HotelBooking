@@ -1,8 +1,10 @@
-﻿using HotelBookingBlazor.Data;
+﻿using HotelBookingBlazor.Constants;
+using HotelBookingBlazor.Data;
 using HotelBookingBlazor.Data.Entities;
 using HotelBookingBlazor.Models;
 using HotelBookingBlazor.Models.Public;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace HotelBookingBlazor.Services
 {
@@ -11,8 +13,8 @@ namespace HotelBookingBlazor.Services
         Task<MethodResult<long>> MakeBookingAsync(BookingModel bookingModel, string userId);
         Task<PagedResult<BookingDisplayModel>> GetBookingAsync(int startIndex, int pageSize);
         Task<MethodResult> ApproveBookingAsync(long bookingId);
-        Task<MethodResult> CancelBookingAsync(long bookingId, string cancelReason);
-        Task<PagedResult<BookingDisplayModel>> GetBookingsForGuestAsync(string guestId, BookingDisplayModel type, int startIndex, int pageSize);
+        Task<MethodResult> CancelBookingAsync(long bookingId, string cancelReason, string? userId = null);
+        Task<PagedResult<BookingDisplayModel>> GetBookingsForGuestAsync(string guestId, BookingDisplayType type, int startIndex, int pageSize);
     }
 
     public class BookingService : IBookingService
@@ -53,7 +55,7 @@ namespace HotelBookingBlazor.Services
             }
 
         }
-   
+
         public async Task<PagedResult<BookingDisplayModel>> GetBookingAsync(int startIndex, int pageSize)
         {
             using var context = _contextFactory.CreateDbContext();
@@ -62,25 +64,7 @@ namespace HotelBookingBlazor.Services
             var totalCount = await query.CountAsync();
 
             var bookings = await query.OrderByDescending(b => b.CheckInDate)
-                                      .Select(b => new BookingDisplayModel
-                                      {
-                                          Adults = b.Adults,
-                                          BookedOn = b.BookedOn,
-                                          CheckInDate = b.CheckInDate,
-                                          CheckOutDate = b.CheckOutDate,
-                                          Children = b.Children,
-                                          GuestId = b.GuestId,
-                                          GuestName = b.Guest.FullName,
-                                          RoomTypeId = b.RoomTypeId,
-                                          RoomTypeName = b.RoomType.Name,
-                                          Id = b.Id,
-                                          RoomId = b.RoomId,
-                                          RoomNumber = b.RoomId == null ? "" : b.Room.RoomNumber,
-                                          SpecialRequest = b.SpecialRequest,
-                                          Status = b.Status,
-                                          TotalAmount = b.TotalAmount,
-                                          Remarks = b.Remarks
-                                      })
+                                      .Select(BookingDisplayModelSelector)
                                       .Skip(startIndex)
                                       .Take(pageSize)
                                       .ToArrayAsync();
@@ -115,7 +99,7 @@ namespace HotelBookingBlazor.Services
             return true;
         }
 
-        public async Task<MethodResult> CancelBookingAsync(long bookingId, string cancelReason)
+        public async Task<MethodResult> CancelBookingAsync(long bookingId, string cancelReason, string? userId = null)
         {
             using var context = _contextFactory.CreateDbContext();
             var booking = await context.Bookings
@@ -127,46 +111,59 @@ namespace HotelBookingBlazor.Services
 
             if (booking.Status == Constants.BookingStatus.Cancelled)
                 return "Уже отменен";
-
             booking.Status = Constants.BookingStatus.Cancelled;
-            booking.Remarks += Environment.NewLine + $"Отменено персоналом/администратором. Причина: {cancelReason}";
+            booking.Remarks += Environment.NewLine + 
+                $"Отменено {(userId == booking.GuestId ? "Гостем" : "Персоналом/администратором")}. Причина: {cancelReason}";
 
             await context.SaveChangesAsync();
             return true;
         }
 
-        public async Task<PagedResult<BookingDisplayModel>> GetBookingsForGuestAsync(string guestId, BookingDisplayModel type, int startIndex, int pageSize)
+        public async Task<PagedResult<BookingDisplayModel>> GetBookingsForGuestAsync(string guestId, BookingDisplayType type, int startIndex, int pageSize)
         {
             using var context = _contextFactory.CreateDbContext();
-            var query = context.Bookings;
+            var query = context.Bookings.Where(b => b.GuestId == guestId);
+
+            var now = DateOnly.FromDateTime(DateTime.Now);
+
+            query = type switch
+            {
+                BookingDisplayType.Upcoming => query.Where(b => b.CheckInDate > now),
+                BookingDisplayType.Ongoing => query.Where(b => b.CheckInDate == now || b.CheckOutDate == now),
+                BookingDisplayType.Past => query.Where(b => b.CheckInDate < now)
+            };
+
 
             var totalCount = await query.CountAsync();
 
             var bookings = await query.OrderByDescending(b => b.CheckInDate)
-                                      .Select(b => new BookingDisplayModel
-                                      {
-                                          Adults = b.Adults,
-                                          BookedOn = b.BookedOn,
-                                          CheckInDate = b.CheckInDate,
-                                          CheckOutDate = b.CheckOutDate,
-                                          Children = b.Children,
-                                          GuestId = b.GuestId,
-                                          GuestName = b.Guest.FullName,
-                                          RoomTypeId = b.RoomTypeId,
-                                          RoomTypeName = b.RoomType.Name,
-                                          Id = b.Id,
-                                          RoomId = b.RoomId,
-                                          RoomNumber = b.RoomId == null ? "" : b.Room.RoomNumber,
-                                          SpecialRequest = b.SpecialRequest,
-                                          Status = b.Status,
-                                          TotalAmount = b.TotalAmount,
-                                          Remarks = b.Remarks
-                                      })
+                                      .Select(BookingDisplayModelSelector)
                                       .Skip(startIndex)
                                       .Take(pageSize)
                                       .ToArrayAsync();
 
             return new PagedResult<BookingDisplayModel>(totalCount, bookings);
         }
+
+        private static Expression<Func<Booking, BookingDisplayModel>> BookingDisplayModelSelector =
+            b => new BookingDisplayModel
+            {
+                Adults = b.Adults,
+                BookedOn = b.BookedOn,
+                CheckInDate = b.CheckInDate,
+                CheckOutDate = b.CheckOutDate,
+                Children = b.Children,
+                GuestId = b.GuestId,
+                GuestName = b.Guest.FullName,
+                RoomTypeId = b.RoomTypeId,
+                RoomTypeName = b.RoomType.Name,
+                Id = b.Id,
+                RoomId = b.RoomId,
+                RoomNumber = b.RoomId == null ? "" : b.Room.RoomNumber,
+                SpecialRequest = b.SpecialRequest,
+                Status = b.Status,
+                TotalAmount = b.TotalAmount,
+                Remarks = b.Remarks
+            };
     }
 }
