@@ -30,5 +30,8 @@ namespace HotelBookingBlazor.Models
 
         public bool CanBeCancelled => Status != BookingStatus.PaymentCancelled
                                    && Status != BookingStatus.Cancelled;
+
+        public bool CanMakePayment => (Status == BookingStatus.Pending || Status == BookingStatus.PaymentCancelled) 
+                                        && CheckInDate >= DateOnly.FromDateTime(DateTime.Today);
     }
 }
