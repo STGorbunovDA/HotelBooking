@@ -1,6 +1,14 @@
 ﻿@page "/guest/my-bookings"
+@using Microsoft.AspNetCore.Components.QuickGrid
 
 @rendermode @(new InteractiveServerRenderMode(prerender:false))
+
+@inject NavigationManager NavigationManager
+@inject IBookingService BookingService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JsRuntime
+@inject IPaymentService PaymentService
+
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center">
@@ -11,35 +19,183 @@
     <hr />
     <div class="row">
         <div class="col-sm-8">
-
         </div>
         <div class="col-sm-4">
             <div class="d-flex justify-content-end">
-                <input type="radio" class="btn-check" name="booking-type" id="upcoming" 
-                checked="@(_selectBookingType == BookingDisplayType.Upcoming)"
-                       @onchange="() => ChangeBookingType(BookingDisplayType.Upcoming)" />
+                <input type="radio" class="btn-check" name="booking-type" id="upcoming"
+                       checked="@(_selectBookingType == BookingDisplayType.Upcoming)"
+                       @onchange="() => ChangeBookingTypeAsync(BookingDisplayType.Upcoming)" />
                 <label class="btn btn-outline-primary" for="upcoming">Предстоящее бронирование </label>
 
-                <input type="radio" class="btn-check" name="booking-type" id="ongoing" 
-                checked="@(_selectBookingType == BookingDisplayType.Ongoing)"
-                       @onchange="() => ChangeBookingType(BookingDisplayType.Ongoing)" />
+                <input type="radio" class="btn-check" name="booking-type" id="ongoing"
+                       checked="@(_selectBookingType == BookingDisplayType.Ongoing)"
+                       @onchange="() => ChangeBookingTypeAsync(BookingDisplayType.Ongoing)" />
                 <label class="btn btn-outline-primary" for="ongoing">Текущее бронирование</label>
 
-                <input type="radio" class="btn-check" name="booking-type" id="past" 
-                checked="@(_selectBookingType == BookingDisplayType.Past)"
-                       @onchange="() => ChangeBookingType(BookingDisplayType.Past)" />
+                <input type="radio" class="btn-check" name="booking-type" id="past"
+                       checked="@(_selectBookingType == BookingDisplayType.Past)"
+                       @onchange="() => ChangeBookingTypeAsync(BookingDisplayType.Past)" />
                 <label class="btn btn-outline-primary" for="past">Предыдущее бронирование</label>
 
             </div>
         </div>
     </div>
     <div class="table-responsive">
-        <p>Currently Selected: @_selectBookingType</p>
+        @if (_noDataFound)
+        {
+            <h3 class="text-center">Нет Брони</h3>
+        }
+        <QuickGrid ItemsProvider="_bookingProvider" @ref="_bookingsGrid" Pagination="_paginationState" class="table table-striped">
+
+            <PropertyColumn Property="b => b.Id" />
+            <PropertyColumn Property="b => b.RoomTypeName" Title="Тип номера" />
+            <TemplateColumn Title="Номер комнаты">
+                @if (context.RoomId is null)
+                {
+                    <label class="d-block">Номера нет</label>
+                }
+                else
+                {
+                    <label class="d-block">@context.RoomNumber</label>
+                }
+            </TemplateColumn>
+            <PropertyColumn Property="b => b.BookedOn" Title="Дата Брони" />
+            <PropertyColumn Property="b => b.CheckInDate" Title="Дата заезда" />
+            <PropertyColumn Property="b => b.CheckOutDate" Title="Дата выезда" />
+            <PropertyColumn Property="b => b.Adults" />
+            <PropertyColumn Property="b => b.Children" />
+            <PropertyColumn Property="b => b.TotalAmount" Title="Цена" />
+            <PropertyColumn Property="b => b.SpecialRequest" Title="Дополнительно" />
+            <PropertyColumn Property="b => b.Status" />
+            <PropertyColumn Property="b => b.Remarks" />
+            <TemplateColumn Class="grid-action-column">
+                <button type="submit" class="btn btn-sm btn-success" disabled="@(!context.CanMakePayment)" @onclick="() => MakePaymentAsync(context)">Оплатить</button>
+                <button type="submit" class="btn btn-sm btn-danger" disabled="@(!context.CanBeCancelled)" @onclick="() => CancelBookingAsync(context)">Отменить</button>
+            </TemplateColumn>
+
+        </QuickGrid>
     </div>
+    <Paginator State="_paginationState" />
 </div>
+
+@if (_isLoading)
+{
+    <Loader LoadingText="@_loadingText" />
+}
+
+<style type="text/css" scoped>
+    .grid-action-column {
+        min-width: 190px;
+    }
+</style>
 
 @code {
     private BookingDisplayType _selectBookingType = BookingDisplayType.Upcoming;
 
-    private void ChangeBookingType(BookingDisplayType type) => _selectBookingType = type;
+    private bool _isLoading;
+    private string _loadingText = "";
+
+
+    private GridItemsProvider<BookingDisplayModel>? _bookingProvider;
+    private QuickGrid<BookingDisplayModel>? _bookingsGrid;
+
+    private const int PageSize = 10;
+
+    private PaginationState _paginationState = new PaginationState { ItemsPerPage = PageSize };
+
+    private bool _noDataFound;
+
+    protected override void OnInitialized()
+    {
+        _bookingProvider = async (GridItemsProviderRequest<BookingDisplayModel> request) =>
+        {
+            _loadingText = "Получение заказов";
+            _isLoading = true;
+            StateHasChanged();
+
+            var guestId = await GetUserIdAsync();
+            if (guestId is null)
+                return default;
+
+            var result = await BookingService.GetBookingsForGuestAsync(guestId, _selectBookingType, request.StartIndex, request.Count ?? PageSize);
+
+            _isLoading = false;
+            _noDataFound = result.TotalCount == 0;
+            StateHasChanged();
+
+
+            return GridItemsProviderResult.From<BookingDisplayModel>(result.Records, result.TotalCount);
+        };
+    }
+
+    private async Task ChangeBookingTypeAsync(BookingDisplayType type)
+    {
+        _selectBookingType = type;
+        await _bookingsGrid.RefreshDataAsync();
+    }
+
+    private async Task<string?> GetUserIdAsync()
+    { 
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (authState.User?.Identity?.IsAuthenticated == true)
+        {
+            return authState.User.GetUserId();
+        }
+        NavigationManager.NavigateTo("/account/login");
+        return null;
+    }
+
+    private async Task MakePaymentAsync(BookingDisplayModel booking)
+    {
+        if(booking.CanMakePayment)
+        {
+            var guestId = await GetUserIdAsync();
+            if (guestId is null)
+                return;
+
+            _loadingText = "Обработка";
+            _isLoading = true;
+
+            var domain = NavigationManager.BaseUri.TrimEnd('/');
+            
+            var noOfDays = (booking.CheckOutDate.DayNumber - booking.CheckInDate.DayNumber);
+
+            var paymentModel = new PaymentModel(booking.Id, booking.RoomTypeName, noOfDays, booking.TotalAmount);
+            var paymentUrl = await PaymentService.GeneratePaymentUrl(paymentModel, guestId, domain);
+
+            NavigationManager.NavigateTo(paymentUrl);
+        }
+    }
+
+    private async Task CancelBookingAsync(BookingDisplayModel booking)
+    {
+        if (booking.CanBeCancelled)
+        {
+            if (await JsRuntime.ConfirmAsync("Вы уверены, что хотите отменить это бронирование?"))
+            {
+                var guestId = await GetUserIdAsync();
+                if (guestId is null)
+                    return;
+
+                var reason = await JsRuntime.PromptAsync("Cancellation Reason: ");
+
+                if (string.IsNullOrWhiteSpace(reason))
+                {
+                    await JsRuntime.AlertAsync("Требуется указать причину отмены бронирования");
+                    return;
+                }
+                var result = await BookingService.CancelBookingAsync(booking.Id, reason, guestId);
+
+                if (!result.IsSucces)
+                {
+                    await JsRuntime.AlertAsync(result.ErrorMessage ?? "Ошибка при отмене бронирования");
+                    return;
+                }
+                else
+                {
+                    await _bookingsGrid.RefreshDataAsync();
+                }
+            }
+        }
+    }
 }
