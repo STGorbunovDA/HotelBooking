@@ -22,7 +22,7 @@
             <TemplateColumn Title="Номер комнаты">
                 @if (context.RoomId is null)
                 {
-                    <small>Номера нет</small>
+                    <label class="d-block">Номера нет</label>
 
                     @if (context.IsRoomNumberAssignable)
                     {
@@ -124,22 +124,16 @@
         var rooms = await RoomTypeService.GetRoomsAsync(booking.RoomTypeId);
         if (rooms is null || rooms.Length == 0)
         {
-            await AlertAsync("В отеле нет номеров такого типа");
+            await JsRuntime.AlertAsync("В отеле нет номеров такого типа");
             return;
         }
         if (!rooms.Any(r => r.IsAvailable))
         {
-            await AlertAsync("В отеле нет номеров такого типа");
+            await JsRuntime.AlertAsync("В отеле нет номеров такого типа");
         }
         _rooms = rooms.Where(r => r.IsAvailable).ToArray();
         _booking = booking;
     }
-
-    private async Task AlertAsync(string message) =>
-        await JsRuntime.InvokeVoidAsync("window.alertModal", message);
-
-    private async Task<bool> ConfirmAsync(string message) =>
-    await JsRuntime.InvokeAsync<bool>("window.confirm", message);
 
     private void HandleAssignRoomModalClose()
     {
@@ -155,7 +149,7 @@
             var result = await RoomTypeService.AssignRoomToBookingAsync(_booking.Id, _selectedRoomId);
             if (!result.IsSucces)
             {
-                await AlertAsync($"Error in assigning/changin room. {result.ErrorMessage}");
+                await JsRuntime.AlertAsync($"Error in assigning/changin room. {result.ErrorMessage}");
                 return;
             }
             HandleAssignRoomModalClose();
@@ -167,12 +161,12 @@
     {
         if(booking.CanBeApproved)
         {
-            if (await ConfirmAsync("Вы уверены, что хотите одобрить это бронирование?"))
+            if (await JsRuntime.ConfirmAsync("Вы уверены, что хотите одобрить это бронирование?"))
             {
                 var result = await BookingService.ApproveBookingAsync(booking.Id);
                 if(!result.IsSucces)
                 {
-                    await AlertAsync(result.ErrorMessage ?? "Ошибка при подтверждении бронирования");
+                    await JsRuntime.AlertAsync(result.ErrorMessage ?? "Ошибка при подтверждении бронирования");
                     return;
                 }
                 else
@@ -187,20 +181,20 @@
     {
         if(booking.CanBeCancelled)
         {
-            if (await ConfirmAsync("Вы уверены, что хотите отменить это бронирование?"))
+            if (await JsRuntime.ConfirmAsync("Вы уверены, что хотите отменить это бронирование?"))
             {
-                var reason = await JsRuntime.InvokeAsync<string?>("window.prompt", "Cancellation Reason: ");
+                var reason = await JsRuntime.PromptAsync("Cancellation Reason: ");
 
                 if(string.IsNullOrWhiteSpace(reason))
                 {
-                    await AlertAsync("Требуется указать причину отмены бронирования");
+                    await JsRuntime.AlertAsync("Требуется указать причину отмены бронирования");
                     return;
                 }
                 var result = await BookingService.CancelBookingAsync(booking.Id, reason);
 
                 if (!result.IsSucces)
                 {
-                    await AlertAsync(result.ErrorMessage ?? "Ошибка при отмене бронирования");
+                    await JsRuntime.AlertAsync(result.ErrorMessage ?? "Ошибка при отмене бронирования");
                     return;
                 }
                 else
