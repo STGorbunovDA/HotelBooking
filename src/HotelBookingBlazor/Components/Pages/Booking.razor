@@ -332,7 +332,7 @@
         var domain = NavigationManager.BaseUri.TrimEnd('/');
         var roomTypeName = _roomTypes.First(rt => rt.Id == _model.RoomTypeId).Name;
 
-        var paymentModel = new PaymentModel(bookingId, roomTypeName, NoOfDays, _price);
+        var paymentModel = new PaymentModel(bookingId, roomTypeName, NoOfDays, TotalAmount);
         var paymentUrl = await PaymentService.GeneratePaymentUrl(paymentModel, _userId, domain);
 
         NavigationManager.NavigateTo(paymentUrl);
