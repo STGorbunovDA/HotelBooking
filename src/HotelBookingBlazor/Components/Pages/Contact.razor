@@ -1,6 +1,8 @@
 ﻿@page "/contact"
 
 @layout InnerPageLayout
+@attribute [StreamRendering]
+@inject IEnquiryService EnquiryService
 
 <Microsoft.AspNetCore.Components.Sections.SectionContent SectionName="PageName">
     Контакты
@@ -37,51 +39,103 @@
             </div>
             <div class="col-md-6">
                 <div class="wow fadeInUp" data-wow-delay="0.2s">
-                    <EditForm Model="Model" Enhance FormName="enquiry-form">
+                    <EditForm Model="Model" Enhance FormName="enquiry-form" OnValidSubmit="SendMessageAsync">
+                         <DataAnnotationsValidator />
                          <div class="row g-3">
                              <div class="col-md-6">
                                  <div class="form-floating">
-                                     <InputText @bind-Value="Model.Name" class="form-control" id="name" placeholder="Введите имя"></InputText>
+                                     <InputText @bind-Value="Model.Name" class="form-control" id="name" placeholder="Введите имя" />
                                      <label for="name">Ваше Имя</label>
                                  </div>
+                                 <ValidationMessage For="() => Model.Name" class="text-danger" />
                              </div>
                              <div class="col-md-6">
                                  <div class="form-floating">
-                                     <input type="email" class="form-control" id="email" placeholder="Введи почту">
-                                     <label for="email">Ваша почта</label>
+                                     <InputText @bind-Value="Model.Email" class="form-control" id="email" placeholder="Введите почту" />
+                                     <label for="name">Ваше почта</label>
                                  </div>
+                                 <ValidationMessage For="() => Model.Email" class="text-danger" />
                              </div>
                              <div class="col-12">
                                  <div class="form-floating">
-                                     <input type="text" class="form-control" id="subject" placeholder="Заголовок(обращение)">
+                                     <InputText @bind-Value="Model.Subject" class="form-control" id="subject" placeholder="Заголовок (обращение)" />
                                      <label for="subject">Заголовок</label>
                                  </div>
+                                 <ValidationMessage For="() => Model.Subject" class="text-danger" />
                              </div>
                              <div class="col-12">
                                  <div class="form-floating">
-                                     <textarea class="form-control" placeholder="Введите ваше сообщение" id="message" style="height: 150px"></textarea>
+                                     <InputTextArea @bind-Value="Model.Message" class="form-control" placeholder="Введите ваше сообщение" id="message" style="height: 150px" />
                                      <label for="message">Сообщение</label>
                                  </div>
+                                 <ValidationMessage For="() => Model.Message" class="text-danger" />
                              </div>
                              <div class="col-12">
-                                 <button class="btn btn-primary w-100 py-3" type="submit">Отправить</button>
-                             </div>
-                         </div>
-                     </EditForm>
-                 </div>
-             </div>
-         </div>
-     </div>
- </div>
+                                 @if (!string.IsNullOrWhiteSpace(_message))
+                                {
+                                    <p class="text-success my-3">
+                                        <strong>@_message</strong>
+                                    </p>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(_error))
+                                {
+                                    <p class="text-danger my-3">
+                                        <strong>@_error</strong>
+                                    </p>
+                                }
+                            </div>
+                            <div class="col-12">
+                                <button class="btn btn-primary w-100 py-3" type="submit" disabled="@_isProcessing">
+                                    @(_isProcessing ? "Sending..." : "Send Message")
+                                </button>
+                            </div>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
- @code {
-    [SupplyParameterFromForm]
+@code {
+    [SupplyParameterFromForm(FormName = "enquiry-form")]
     public EnquiryModel Model { get; set; } = new();
+
+    [CascadingParameter]
+    public HttpContext HttpContext { get; set; }
 
     private string? _error;
     private string? _message;
     private bool _isProcessing;
 
-    [CascadingParameter]
-    public HttpContext HttpContext { get; set; }
+    protected override void OnInitialized()
+    {
+        if(HttpMethods.IsGet(HttpContext.Request.Method))
+        {
+            if(HttpContext.User?.Identity?.IsAuthenticated == true)
+            {
+               Model.Name = HttpContext.User.FindFirst(AppConstans.CustomClaimTypes.FullName)!.Value;
+               Model.Email = HttpContext.User.FindFirst(AppConstans.CustomClaimTypes.Email)!.Value;
+            }
+        }
+    }
+
+    private async Task SendMessageAsync()
+    {
+        _error = _message = null;
+        _isProcessing = true;
+
+        var result = await EnquiryService.AddEnquiryAsync(Model);
+
+        if (!result.IsSucces)
+        {
+            _error = result.ErrorMessage ?? "Ошибка при отправке запроса";
+        }
+        else
+        {
+            _message = "Запрос отправлен успешно";
+        }
+        Model = new();
+        _isProcessing = false;
+    }
 }
