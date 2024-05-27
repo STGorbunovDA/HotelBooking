@@ -51,7 +51,7 @@
  </EditForm>
 
 @code {
-    [SupplyParameterFromForm]
+    [SupplyParameterFromForm(FormName = "filter-from")]
     public FilterModel Model { get; set; } = new();
 
     [SupplyParameterFromQuery]
