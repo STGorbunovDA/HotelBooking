@@ -12,6 +12,7 @@ namespace HotelBookingBlazor.Data
         public DbSet<RoomTypeAmenity> RoomTypeAmenities { get; set; }
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<Enquiry> Enquiries { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
