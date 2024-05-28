@@ -1,0 +1,57 @@
+﻿@page "/staff-admin/manage-subscribers"
+
+@using HotelBookingBlazor.Data.Entities
+@using Microsoft.AspNetCore.Components.QuickGrid
+
+
+@rendermode @(new InteractiveServerRenderMode(prerender:false))
+
+@inject ISubscriberService SubscriberService
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1>
+            Manage Subscribers
+        </h1>
+    </div>
+    <hr />
+    <div class="table-responsive">
+        <QuickGrid ItemsProvider="_subscribersProvider" Pagination="_paginationState" class="table table-striped">
+            <PropertyColumn Property="b => b.Id" />
+            <PropertyColumn Property="b => b.Email" />
+            <PropertyColumn Property="b => b.SubscriberOn" Title="Дата подписки" />
+        </QuickGrid>
+    </div>
+    <Paginator State="_paginationState" />
+</div>
+
+@if (_isLoading)
+{
+    <Loader LoadingText="Fetching subscribers" />
+}
+
+
+@code {
+    private bool _isLoading;
+    private GridItemsProvider<Subscriber>? _subscribersProvider;
+
+    private const int PageSize = 10;
+
+    private PaginationState _paginationState = new PaginationState { ItemsPerPage = PageSize };
+
+    protected override void OnInitialized()
+    {
+        _subscribersProvider = async (GridItemsProviderRequest<Subscriber> request) =>
+        {
+            _isLoading = true;
+            StateHasChanged();
+
+            var result = await SubscriberService.GetSubscribersAsync(request.StartIndex, request.Count ?? PageSize);
+
+            _isLoading = false;
+            StateHasChanged();
+            return GridItemsProviderResult.From<Subscriber>(result.Records, result.TotalCount);
+        };
+    }
+}
+
