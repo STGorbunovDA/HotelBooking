@@ -8,7 +8,7 @@ namespace HotelBookingBlazor.Services
     public interface IEnquiryService
     {
         Task<MethodResult> AddEnquiryAsync(EnquiryModel model);
-        Task<PagedResult<Enquiry>> GetEnquiries(int startIndex, int pageSize);
+        Task<PagedResult<Enquiry>> GetEnquiriesAsync(int startIndex, int pageSize);
     }
 
     public class EnquiryService : IEnquiryService
@@ -34,7 +34,7 @@ namespace HotelBookingBlazor.Services
             return true;
         }
 
-        public async Task<PagedResult<Enquiry>> GetEnquiries(int startIndex, int pageSize)
+        public async Task<PagedResult<Enquiry>> GetEnquiriesAsync(int startIndex, int pageSize)
         {
             using var context = _contextFactory.CreateDbContext();
             var totalCount = await context.Enquiries.CountAsync();
