@@ -1,8 +1,60 @@
 ﻿@page "/staff-admin/manage-enquiries"
 
-<h3>ManageEnquiries</h3>
+@using HotelBookingBlazor.Data.Entities
+@using Microsoft.AspNetCore.Components.QuickGrid
+
+
+@rendermode @(new InteractiveServerRenderMode(prerender:false))
+
+@inject IEnquiryService EnquiryService
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1>
+            Manage Enquiries
+        </h1>
+    </div>
+    <hr />
+    <div class="table-responsive">
+        <QuickGrid ItemsProvider="_enquiriesProvider" Pagination="_paginationState" class="table table-striped">
+            <PropertyColumn Property="b => b.Id" />
+            <PropertyColumn Property="b => b.Name" />
+            <PropertyColumn Property="b => b.Email" />
+            <PropertyColumn Property="b => b.Subject" />
+            <PropertyColumn Property="b => b.Message" />
+            <PropertyColumn Property="b => b.EnquiredOn" Title="Дата запроса"/>
+        </QuickGrid>
+    </div>
+    <Paginator State="_paginationState" />
+</div>
+
+@if (_isLoading)
+{
+    <Loader LoadingText="Fetching enquiries" />
+}
+
 
 @code {
+    private bool _isLoading;
+    private GridItemsProvider<Enquiry>? _enquiriesProvider;
 
+    private const int PageSize = 10;
+
+    private PaginationState _paginationState = new PaginationState { ItemsPerPage = PageSize };
+
+    protected override void OnInitialized()
+    {
+        _enquiriesProvider = async (GridItemsProviderRequest<Enquiry> request) =>
+        {
+            _isLoading = true;
+            StateHasChanged();
+
+            var result = await EnquiryService.GetEnquiriesAsync(request.StartIndex, request.Count ?? PageSize);
+
+            _isLoading = false;
+            StateHasChanged();
+            return GridItemsProviderResult.From<Enquiry>(result.Records, result.TotalCount);
+        };
+    }
 }
-}
+
