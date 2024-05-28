@@ -48,7 +48,8 @@ builder.Services.AddTransient<SeedService>()
                 .AddTransient<IRoomsService, RoomsService>()
                 .AddTransient<IBookingService, BookingService>()
                 .AddTransient<IPaymentService, PaymentService>()
-                .AddTransient<IEnquiryService, EnquiryService>();
+                .AddTransient<IEnquiryService, EnquiryService>()
+                .AddTransient<ISubscriberService, SubscriberService>();
 
 var app = builder.Build();
 
