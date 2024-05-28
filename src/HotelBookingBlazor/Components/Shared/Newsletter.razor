@@ -1,14 +1,35 @@
 ﻿
+@attribute [StreamRendering]
+@inject ISubscriberService SubscriberService
+
 <div class="container newsletter mt-5 wow fadeIn" data-wow-delay="0.1s">
     <div class="row justify-content-center">
         <div class="col-lg-10 border rounded p-1">
             <div class="border rounded text-center p-1">
                 <div class="bg-white rounded text-center p-5">
                     <h4 class="mb-4">Подпишитесь на нашу <span class="text-primary text-uppercase">Новостную рассылку</span></h4>
-                    <div class="position-relative mx-auto" style="max-width: 400px;">
-                        <input class="form-control w-100 py-3 ps-4 pe-5" type="text" placeholder="Введите почту">
-                        <button type="button" class="btn btn-primary py-2 px-3 position-absolute top-0 end-0 mt-2 me-2">Подписаться</button>
-                    </div>
+                    <EditForm Model="Model" Enhance FormName="subscribe-form" OnValidSubmit="SubscribeAsync">
+                        <DataAnnotationsValidator />
+                         <div class="position-relative mx-auto" style="max-width: 400px;">
+                             <InputText @bind-Value="Model.Email" class="form-control w-100 py-3 ps-4 pe-5" type="email" placeholder="Введите почту" />
+                             <ValidationMessage For="() => Model.Email" class="text-danger" />
+                             @if (!string.IsNullOrWhiteSpace(_message))
+                            {
+                                <p class="text-success my-3">
+                                    <strong>@_message</strong>
+                                </p>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(_error))
+                            {
+                                <p class="text-danger my-3">
+                                    <strong>@_error</strong>
+                                </p>
+                            }
+                             <button type="submit" class="btn btn-primary py-2 px-3 position-absolute top-0 end-0 mt-2 me-2" disabled="@_isProcessing">
+                                @(_isProcessing ? "Подписка..." : "Submit")
+                             </button>
+                         </div>
+                    </EditForm>
                 </div>
             </div>
         </div>
@@ -16,6 +37,31 @@
 </div>
 
 
-@code {
+ @code {
 
+    [SupplyParameterFromForm(FormName = "subscribe-form")]
+    private SubscribeModel Model { get; set; } = new();
+
+    private bool _isProcessing;
+    private string? _error;
+    private string? _message;
+
+    private async Task SubscribeAsync()
+    {
+        _error = _message = null;
+        _isProcessing = true;
+
+        var result = await SubscriberService.SubscribeAsync(Model.Email);
+
+        if (!result.IsSucces)
+        {
+            _error = result.ErrorMessage ?? "Ошибка при отправке запроса для подписки";
+        }
+        else
+        {
+            _message = "Подписка успешно оформлена";
+        }
+        Model = new();
+        _isProcessing = false;
+    }
 }
