@@ -1,4 +1,4 @@
-﻿ 
+﻿
 <div class="container-fluid p-0 mb-5">
     <div id="header-carousel" class="carousel slide" data-bs-ride="carousel">
         <div class="carousel-inner">
@@ -24,6 +24,20 @@
                     </div>
                 </div>
             </div>
+            @* @foreach(var img in _images)
+            {
+                <div class="carousel-item active">
+                    <img class="w-100" src="@img" alt="Image">
+                    <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
+                        <div class="p-3" style="max-width: 700px;">
+                            <h6 class="section-title text-white text-uppercase mb-3 animated slideInDown">Премиум отель</h6>
+                            <h1 class="display-3 text-white mb-4 animated slideInDown">Откройте для себя комфорт</h1>
+                            <a href="/rooms" class="btn btn-primary py-md-3 px-md-5 me-3 animated slideInLeft">О номерах</a>
+                            <a href="/booking" class="btn btn-light py-md-3 px-md-5 animated slideInRight">Забронировать</a>
+                        </div>
+                    </div>
+                </div>
+            } *@
         </div>
         <button class="carousel-control-prev" type="button" data-bs-target="#header-carousel"
                 data-bs-slide="prev">
@@ -39,5 +53,5 @@
 </div>
 
 @code {
-
+    private string[] _images = ["img/carousel-1.jpg", "img/carousel-2.jpg"];
 }

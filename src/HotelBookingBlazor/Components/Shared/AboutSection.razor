@@ -35,7 +35,10 @@
                         </div>
                     </div>
                 </div>
-                <a class="btn btn-primary py-3 px-5 mt-2" href="">Исследуйте больше</a>
+                @if (ShowButton)
+                {
+                    <a class="btn btn-primary py-3 px-5 mt-2" href="/about-us">Исследуйте больше</a>
+                }
             </div>
             <div class="col-lg-6">
                 <div class="row g-3">
@@ -58,5 +61,5 @@
 </div>
 
 @code {
-
+    [Parameter] public bool ShowButton { get; set; }
 }

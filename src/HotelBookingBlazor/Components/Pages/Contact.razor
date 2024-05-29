@@ -1,8 +1,10 @@
 ﻿@page "/contact"
+@using Microsoft.Extensions.Options
 
 @layout InnerPageLayout
 @attribute [StreamRendering]
 @inject IEnquiryService EnquiryService
+@inject IOptions<ContactInfoOptions> ContactInfoOptions
 
 <Microsoft.AspNetCore.Components.Sections.SectionContent SectionName="PageName">
     Контакты
@@ -19,15 +21,15 @@
                 <div class="row gy-4">
                     <div class="col-md-4">
                         <h6 class="section-title text-start text-primary text-uppercase">Бронирование</h6>
-                        <p><i class="fa fa-envelope-open text-primary me-2"></i>bous07@mail.ru</p>
+                        <p><i class="fa fa-envelope-open text-primary me-2"></i>@_contactInfoOptions.BookingEmail</p>
                     </div>
                     <div class="col-md-4">
                         <h6 class="section-title text-start text-primary text-uppercase">Общие</h6>
-                        <p><i class="fa fa-envelope-open text-primary me-2"></i>bous07@mail.ru</p>
+                        <p><i class="fa fa-envelope-open text-primary me-2"></i>@_contactInfoOptions.GeneralEmail</p>
                     </div>
                     <div class="col-md-4">
                         <h6 class="section-title text-start text-primary text-uppercase">Технические</h6>
-                        <p><i class="fa fa-envelope-open text-primary me-2"></i>bous07@mail.ru</p>
+                        <p><i class="fa fa-envelope-open text-primary me-2"></i>@_contactInfoOptions.TechnicalEmail</p>
                     </div>
                 </div>
             </div>
@@ -104,18 +106,22 @@
     [CascadingParameter]
     public HttpContext HttpContext { get; set; }
 
+    private ContactInfoOptions _contactInfoOptions = new();
+
     private string? _error;
     private string? _message;
     private bool _isProcessing;
 
     protected override void OnInitialized()
     {
+        _contactInfoOptions = ContactInfoOptions.Value;
+
         if(HttpMethods.IsGet(HttpContext.Request.Method))
         {
             if(HttpContext.User?.Identity?.IsAuthenticated == true)
             {
-               Model.Name = HttpContext.User.FindFirst(AppConstans.CustomClaimTypes.FullName)!.Value;
-               Model.Email = HttpContext.User.FindFirst(AppConstans.CustomClaimTypes.Email)!.Value;
+               Model.Name = HttpContext.User.FindFirst(AppConstans.CustomClaimTypes.FullName)?.Value.ToString();
+                Model.Email = HttpContext.User.FindFirst(AppConstans.CustomClaimTypes.Email)?.Value.ToString();
             }
         }
     }
