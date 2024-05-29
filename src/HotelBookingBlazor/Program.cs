@@ -8,6 +8,7 @@ using HotelBookingBlazor.Services;
 using HotelBookingBlazor.Endpoints;
 using HotelBookingBlazor.Services.Public;
 using Stripe;
+using HotelBookingBlazor.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +51,8 @@ builder.Services.AddTransient<SeedService>()
                 .AddTransient<IPaymentService, PaymentService>()
                 .AddTransient<IEnquiryService, EnquiryService>()
                 .AddTransient<ISubscriberService, SubscriberService>();
+
+builder.Services.Configure<ContactInfoOptions>(builder.Configuration.GetSection(ContactInfoOptions.Key));
 
 var app = builder.Build();
 
