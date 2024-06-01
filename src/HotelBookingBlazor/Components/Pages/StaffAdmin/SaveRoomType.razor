@@ -125,8 +125,6 @@
                                 var existingAmenity = Model.Amenities.FirstOrDefault(ma => ma.Id == a.Id);
                                 return new AmenitySelectionModel(a.Id, a.Name, existingAmenity is not null, existingAmenity?.Unit);
                             }).ToArray();
-
-
     }
 
     private async Task SaveRoomTypeAsync()

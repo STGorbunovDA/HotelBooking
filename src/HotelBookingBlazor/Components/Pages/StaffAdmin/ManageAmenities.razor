@@ -1,9 +1,9 @@
 ﻿@page "/staff-admin/manage-amenities"
+
 @using HotelBookingBlazor.Data.Entities
 @using Microsoft.AspNetCore.Antiforgery
 
 @attribute [StreamRendering]
-@* @attribute [RequireAntiforgeryToken] *@
 
 @inject NavigationManager NavigationManager
 
@@ -80,11 +80,11 @@
                                 <td>@a.Name</td>
                                 <td>@a.Icon</td>
                                 <td>
-                                    <a href="staff-admin/manage-amenities?id=@a.Id" class="btn btn-sm btn-primary">Edit</a>
+                                    <a href="staff-admin/manage-amenities?id=@a.Id" class="btn btn-sm btn-primary">Редактировать</a>
                                 </td>
                                 <td>
                                     <form method="post" action="staff-admin/manage-amenities/delete/@a.Id">
-                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                        <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
                                     </form>
                                 </td>
                             </tr>

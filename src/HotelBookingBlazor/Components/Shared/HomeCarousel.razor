@@ -2,7 +2,7 @@
 <div class="container-fluid p-0 mb-5">
     <div id="header-carousel" class="carousel slide" data-bs-ride="carousel">
         <div class="carousel-inner">
-            <div class="carousel-item active">
+            @* <div class="carousel-item active">
                 <img class="w-100" src="img/carousel-1.jpg" alt="Image">
                 <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
                     <div class="p-3" style="max-width: 700px;">
@@ -23,10 +23,12 @@
                         <a href="/booking" class="btn btn-light py-md-3 px-md-5 animated slideInRight">Забронировать</a>
                     </div>
                 </div>
-            </div>
-            @* @foreach(var img in _images)
+            </div> *@
+
+            @for (int i = 0; i < _images.Length; i++)
             {
-                <div class="carousel-item active">
+                var img = _images[i];
+                <div class="carousel-item @(i == 0 ? "active" : "")">
                     <img class="w-100" src="@img" alt="Image">
                     <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
                         <div class="p-3" style="max-width: 700px;">
@@ -37,7 +39,7 @@
                         </div>
                     </div>
                 </div>
-            } *@
+            }
         </div>
         <button class="carousel-control-prev" type="button" data-bs-target="#header-carousel"
                 data-bs-slide="prev">

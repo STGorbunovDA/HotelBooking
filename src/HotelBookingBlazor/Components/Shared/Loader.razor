@@ -2,7 +2,7 @@
 <div class="fullscreen-fixed d-flex justify-content-center align-items-center loader">
     <div class="d-flex flex-column justify-content-center align-items-center shadow-lg p-3">
         <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
+            <span class="visually-hidden">@LoadingText...</span>
         </div>
         <label>@LoadingText...</label>
     </div>
@@ -10,7 +10,7 @@
 <div class="fullscreen-fixed overlay"></div>
 
 @code {
-    [Parameter] public string? LoadingText { get; set; } = "Loading";
+    [Parameter] public string? LoadingText { get; set; } = "Загрузка";
 }
 
 <style type="text/css" scoped>

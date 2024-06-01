@@ -18,8 +18,6 @@
     Бронирование
 </Microsoft.AspNetCore.Components.Sections.SectionContent>
 
-@* <BookingBig /> *@
-
 <div class="container-xxl py-5">
     <div class="container">
         <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
@@ -140,7 +138,8 @@
                             </div>
                             <div class="col-12">
                                 <div class="form-floating">
-                                    <InputSelect ValueExpression="() => _model.RoomTypeId"
+                                    <InputSelect Value="@_model.RoomTypeId"
+                                                 ValueExpression="() => _model.RoomTypeId"
                                                  ValueChanged="(short id) => HandleRoomTypeChange(id)"
                                                  class="form-select" id="select3">
                                         <option value="0">Выбор комнаты</option>

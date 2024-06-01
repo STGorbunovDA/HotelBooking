@@ -13,7 +13,7 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center">
         <h1>
-            My Bookings
+            Мои бронирования
         </h1>
     </div>
     <hr />
@@ -177,7 +177,7 @@
                 if (guestId is null)
                     return;
 
-                var reason = await JsRuntime.PromptAsync("Cancellation Reason: ");
+                var reason = await JsRuntime.PromptAsync("Причина отмены бронирования: ");
 
                 if (string.IsNullOrWhiteSpace(reason))
                 {

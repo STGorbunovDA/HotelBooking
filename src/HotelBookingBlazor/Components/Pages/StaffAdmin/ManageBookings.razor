@@ -1,4 +1,5 @@
 ﻿@page "/staff-admin/manage-bookings"
+
 @using HotelBookingBlazor.Data.Entities
 @using Microsoft.AspNetCore.Components.QuickGrid
 
@@ -11,7 +12,7 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center">
         <h1>
-            Manage Bookings
+            Управление бронированием
         </h1>
     </div>
     <hr />
@@ -60,18 +61,18 @@
 
 @if (_isLoading)
 {
-    <Loader LoadingText="Fetching bookings" />
+    <Loader LoadingText="Получение заказов" />
 }
 
 <DialogComponent DialogId="assign-room-to-booking"
                  Show="_booking is not null"
-                 Title="Assign/Change Room to Booking"
+                 Title="Назначить/изменить номер для бронирования"
                  OnCloseModal="HandleAssignRoomModalClose">
     <div>
         <div class="mb-3">
             <label class="form-label">№ Номера: </label>
             <select @bind="_selectedRoomId" class="form-control form-control-sm">
-                <option value="0">Select Room</option>
+                <option value="0">Выбор комнаты</option>
                 @foreach (var room in _rooms)
                 {
                     <option value="@room.Id">@room.RoomNumber</option>
@@ -79,7 +80,7 @@
             </select>
         </div>
         <div class="mb-3">
-            <button type="button" class="btn btn-primary btn-sm" @onclick="AssignRoomAsync">Save</button>
+            <button type="button" class="btn btn-primary btn-sm" @onclick="AssignRoomAsync">Сохранить</button>
         </div>
     </div>
 
@@ -149,7 +150,7 @@
             var result = await RoomTypeService.AssignRoomToBookingAsync(_booking.Id, _selectedRoomId);
             if (!result.IsSucces)
             {
-                await JsRuntime.AlertAsync($"Error in assigning/changin room. {result.ErrorMessage}");
+                await JsRuntime.AlertAsync($"Ошибка при назначении/изменении комнаты. {result.ErrorMessage}");
                 return;
             }
             HandleAssignRoomModalClose();
@@ -183,7 +184,7 @@
         {
             if (await JsRuntime.ConfirmAsync("Вы уверены, что хотите отменить это бронирование?"))
             {
-                var reason = await JsRuntime.PromptAsync("Cancellation Reason: ");
+                var reason = await JsRuntime.PromptAsync("Причина отмены бронирования: ");
 
                 if(string.IsNullOrWhiteSpace(reason))
                 {
